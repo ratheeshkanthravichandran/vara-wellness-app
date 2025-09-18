@@ -3,7 +3,6 @@
  * @fileOverview Defines a Genkit flow for a general-purpose AI assistant named Tiara.
  *
  * - `askTiara` - The exported function to trigger the flow.
- * - `askTiaraStream` - The exported function to trigger the streaming flow.
  * - `TiaraInput` - The input type for the flow.
  * - `TiaraOutput` - The output type for the flow.
  */
@@ -26,25 +25,6 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
-export async function askTiaraStream(input: TiaraInput) {
-  const { stream } = tiaraAssistantStreamFlow(input);
-
-  const encoder = new TextEncoder();
-  const newStream = new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        if (chunk.content) {
-          const text = chunk.content.map((c) => c.text || '').join('');
-          controller.enqueue(encoder.encode(text));
-        }
-      }
-      controller.close();
-    },
-  });
-
-  return newStream;
-}
-
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
@@ -53,7 +33,7 @@ const prompt = ai.definePrompt({
 
 Your role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
 
-If you need to access real-time information, use the provided web search tool.
+If you need to access real-time information to answer the user's question, use the provided web search tool.
 
 User's message:
 "{{{message}}}"
@@ -70,17 +50,7 @@ const tiaraAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     const result = await prompt(input);
-    return { response: result.text! };
-  }
-);
-
-const tiaraAssistantStreamFlow = ai.defineFlow(
-  {
-    name: 'tiaraAssistantStreamFlow',
-    inputSchema: TiaraInputSchema,
-    stream: true,
-  },
-  async (input) => {
-    return await prompt.stream(input);
+    const response = result.text();
+    return { response };
   }
 );

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { askTiaraStream } from '@/ai/flows/tiara-assistant-flow';
+import { askTiara } from '@/ai/flows/tiara-assistant-flow';
 import { useToast } from '@/hooks/use-toast';
 import {
   Form,
@@ -28,6 +28,7 @@ type Message = {
   id: string;
   sender: 'user' | 'tiara';
   text: string;
+  isThinking?: boolean;
 };
 
 export default function AssistantPage() {
@@ -61,31 +62,31 @@ export default function AssistantPage() {
       sender: 'user',
       text: values.message,
     };
-    const tiaraMessageId = `tiara-${Date.now()}`;
-    const initialTiaraMessage: Message = {
-      id: tiaraMessageId,
+
+    const tiaraThinkingMessage: Message = {
+      id: `tiara-${Date.now()}`,
       sender: 'tiara',
-      text: '',
+      text: 'Tiara is thinking...',
+      isThinking: true,
     };
-    setConversation(prev => [...prev, userMessage, initialTiaraMessage]);
+
+    setConversation((prev) => [...prev, userMessage, tiaraThinkingMessage]);
     form.reset();
 
     try {
-      const stream = await askTiaraStream(values);
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = '';
+      const result = await askTiara(values);
 
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        fullResponse += decoder.decode(value, { stream: true });
-        setConversation(prev =>
-          prev.map(msg =>
-            msg.id === tiaraMessageId ? { ...msg, text: fullResponse } : msg,
-          ),
-        );
-      }
+      const tiaraResponseMessage: Message = {
+        id: tiaraThinkingMessage.id, // Use the same ID to replace the thinking message
+        sender: 'tiara',
+        text: result.response,
+      };
+
+      setConversation((prev) =>
+        prev.map((msg) =>
+          msg.id === tiaraThinkingMessage.id ? tiaraResponseMessage : msg,
+        ),
+      );
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -93,8 +94,8 @@ export default function AssistantPage() {
         description:
           error instanceof Error ? error.message : 'Please try again.',
       });
-      // Remove both user's and tiara's placeholder message on error
-      setConversation(prev => prev.slice(0, -2));
+      // Remove the thinking message and the user's message on error
+      setConversation((prev) => prev.slice(0, -2));
     } finally {
       setLoading(false);
     }
@@ -125,7 +126,7 @@ export default function AssistantPage() {
                     <p>Ask anything, or start a discussion on any topic.</p>
                   </div>
                 )}
-                {conversation.map(msg => (
+                {conversation.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex items-start gap-3 ${
@@ -146,13 +147,13 @@ export default function AssistantPage() {
                           : 'bg-muted'
                       }`}
                     >
-                      {msg.text ? (
-                        <p className="text-sm whitespace-pre-wrap">
+                      {msg.isThinking ? (
+                        <p className="text-sm text-muted-foreground animate-pulse">
                           {msg.text}
                         </p>
                       ) : (
-                        <p className="text-sm text-muted-foreground animate-pulse">
-                          Tiara is thinking...
+                        <p className="text-sm whitespace-pre-wrap">
+                          {msg.text}
                         </p>
                       )}
                     </div>
@@ -182,7 +183,7 @@ export default function AssistantPage() {
                             className="min-h-[40px] resize-none"
                             rows={1}
                             {...field}
-                            onKeyDown={e => {
+                            onKeyDown={(e) => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
                                 form.handleSubmit(onSubmit)();
