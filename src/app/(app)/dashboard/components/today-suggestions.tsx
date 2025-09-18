@@ -26,7 +26,7 @@ export function TodaySuggestions({log, cyclePhase}: {log: LogData, cyclePhase: s
 
   useEffect(() => {
     async function getSuggestions() {
-      if (!log) return;
+      if (!log || !cyclePhase) return;
       setLoading(true);
       setError(null);
       try {
@@ -90,3 +90,5 @@ export function TodaySuggestions({log, cyclePhase}: {log: LogData, cyclePhase: s
     </div>
   );
 }
+
+    

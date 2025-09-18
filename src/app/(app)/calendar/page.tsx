@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { addDays, format, eachDayOfInterval, differenceInDays, startOfDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap, Repeat } from 'lucide-react';
@@ -149,10 +149,10 @@ export default function CalendarPage() {
   const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
   const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
   
-  const handleDayClick = (day: Date, modifiers: { selected?: boolean }) => {
-    if (modifiers.selected) {
-      // If the clicked day is already selected, open the log dialog
-      handleOpenLog(day);
+  const handleDayClick = (day: Date, { selected }: { selected?: boolean }) => {
+    setSelectedDate(day);
+    if (!selected) {
+        setSelectedRange(undefined); // Clear range if a single day is clicked
     }
   };
 
@@ -394,5 +394,4 @@ export default function CalendarPage() {
     </div>
   );
 }
-
     

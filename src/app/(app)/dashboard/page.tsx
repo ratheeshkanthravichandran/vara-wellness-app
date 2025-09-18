@@ -9,20 +9,31 @@ import {
 } from '@/components/ui/card';
 import { Droplet, Zap, Heart, Brain } from 'lucide-react';
 import { TodaySuggestions } from './components/today-suggestions';
-import { getLogs, getCycleData, type LogData } from '@/app/(app)/calendar/page';
+import { getLogs, getCycleData, type CycleData, type LogData } from '@/app/(app)/calendar/page';
 import { useState, useEffect } from 'react';
 import { format, differenceInDays, addDays } from 'date-fns';
 
-function getCycleDay(cycleData: any) {
-  if (!cycleData || cycleData.periods.length === 0) {
-    return 1;
+function getCycleDay(cycleData: CycleData | null): number {
+    if (!cycleData || cycleData.periods.length === 0) {
+      return 1;
+    }
+    const lastPeriodStart = new Date(cycleData.periods[cycleData.periods.length - 1].from);
+    // Ensure we are comparing date objects without time component
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+  
+    const diffDays = differenceInDays(today, lastPeriodStart);
+  
+    // If diffDays is negative, it means the last period is in the future.
+    // This can happen with default data. We'll just show day 1.
+    if (diffDays < 0) {
+        return 1;
+    }
+    
+    const cycleDay = (diffDays % cycleData.cycleLength) + 1;
+    return cycleDay;
   }
-  const lastPeriodStart = new Date(cycleData.periods[cycleData.periods.length - 1].from);
-  const today = new Date();
-  const diffDays = differenceInDays(today, lastPeriodStart);
-  return (diffDays % cycleData.cycleLength) + 1;
-}
-
+  
 
 function getCyclePhase(day: number, periodLength: number) {
     if (day <= periodLength) return 'Menstrual Phase';
@@ -47,6 +58,7 @@ function getMoodLabel(level: number | undefined){
 
 export default function DashboardPage() {
   const [log, setLog] = useState<LogData | null>(null);
+  const [cycleData, setCycleData] = useState<CycleData | null>(null);
   const [cycleDay, setCycleDay] = useState(0);
   const [cyclePhase, setCyclePhase] = useState('');
 
@@ -56,10 +68,11 @@ export default function DashboardPage() {
     const todayLog = logs[todayKey];
     setLog(todayLog);
 
-    const cycleData = getCycleData();
-    const day = getCycleDay(cycleData);
+    const cData = getCycleData();
+    setCycleData(cData);
+    const day = getCycleDay(cData);
     setCycleDay(day);
-    setCyclePhase(getCyclePhase(day, cycleData.periodLength));
+    setCyclePhase(getCyclePhase(day, cData.periodLength));
 
   }, []);
 
@@ -79,7 +92,7 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cycle Day</CardTitle>
+              <CardTitle>Cycle Day</CardTitle>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Droplet className="h-4 w-4" />
               </div>
@@ -91,7 +104,7 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle>
                 Energy Level
               </CardTitle>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -107,7 +120,7 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Mood</CardTitle>
+              <CardTitle>Mood</CardTitle>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Heart className="h-4 w-4" />
               </div>
@@ -121,7 +134,7 @@ export default function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Symptoms</CardTitle>
+              <CardTitle>Symptoms</CardTitle>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Brain className="h-4 w-4" />
               </div>
@@ -134,7 +147,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-        {log && <TodaySuggestions log={log} cyclePhase={cyclePhase} />}
+        {log && cyclePhase && <TodaySuggestions log={log} cyclePhase={cyclePhase} />}
       </main>
     </div>
   );
