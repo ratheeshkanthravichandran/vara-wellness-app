@@ -15,6 +15,7 @@ import { format, differenceInDays, addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Logo } from '@/components/logo';
 
 function getCycleDay(cycleData: CycleData | null): number {
     if (!cycleData || cycleData.periods.length === 0) {
@@ -88,10 +89,10 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col">
       <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
         <div className="flex items-center gap-4">
-            <SidebarTrigger className="md:hidden" />
-            <h1 className="text-lg font-semibold md:text-2xl font-headline">
-            Dashboard
-            </h1>
+            <SidebarTrigger className="lg:hidden" />
+            <div className="hidden lg:block">
+              <Logo />
+            </div>
         </div>
         <Link href="/calendar">
           <Button variant="outline">

@@ -11,7 +11,7 @@ export default function WellnessPage() {
     <div className="flex flex-1 flex-col">
        <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
         <div className="flex items-center gap-4">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger className="lg:hidden" />
             <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
                 <BrainCircuit className="w-6 h-6 text-primary" />
                 Wellness Journey

@@ -10,6 +10,7 @@ import { MainNav } from '@/components/main-nav';
 import { UserNav } from '@/components/user-nav';
 import { Logo } from '@/components/logo';
 import { RightSidebar } from './components/right-sidebar';
+import { BottomNavBar } from '@/components/bottom-nav-bar';
 
 export default function AppLayout({
   children,
@@ -19,7 +20,7 @@ export default function AppLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <Sidebar variant="floating" collapsible="icon" className="w-1/4 max-w-[280px]">
+        <Sidebar variant="floating" collapsible="icon" className="w-1/4 max-w-[280px] hidden md:flex">
             <SidebarHeader>
               <Logo />
             </SidebarHeader>
@@ -31,9 +32,12 @@ export default function AppLayout({
             </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 w-full max-w-[600px] mx-auto border-x">
-          {children}
-        </main>
+        <div className="flex-1 w-full flex flex-col">
+            <main className="flex-1 w-full max-w-[600px] mx-auto border-x pb-20 md:pb-0">
+              {children}
+            </main>
+            <BottomNavBar />
+        </div>
         
         <RightSidebar />
       </div>
