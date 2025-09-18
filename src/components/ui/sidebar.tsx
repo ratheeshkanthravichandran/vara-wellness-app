@@ -183,7 +183,7 @@ const Sidebar = React.forwardRef<
           <SheetContent
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-card p-0 text-card-foreground [&>button]:hidden"
             style={
               {
                 "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -203,7 +203,7 @@ const Sidebar = React.forwardRef<
          <aside
            ref={ref}
            className={cn(
-             "group sticky top-0 h-screen hidden md:flex flex-col z-10",
+             "group sticky top-0 h-screen flex flex-col z-10",
              'transition-all duration-300 ease-in-out',
              state === 'expanded' ? 'w-[--sidebar-width]' : 'w-[--sidebar-width-icon]',
              className

@@ -93,6 +93,9 @@ export default function DashboardPage() {
             <div className="hidden lg:block">
               <Logo />
             </div>
+            <div className="lg:hidden">
+                <h1 className="text-lg font-semibold md:text-2xl font-headline">Dashboard</h1>
+            </div>
         </div>
         <Link href="/calendar">
           <Button variant="outline">
