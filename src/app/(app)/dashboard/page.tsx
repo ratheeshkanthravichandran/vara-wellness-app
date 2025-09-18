@@ -9,21 +9,23 @@ import {
 } from '@/components/ui/card';
 import { Droplet, Zap, Heart, Brain } from 'lucide-react';
 import { TodaySuggestions } from './components/today-suggestions';
-import { getLogs, type LogData } from '@/app/(app)/calendar/page';
+import { getLogs, getCycleData, type LogData } from '@/app/(app)/calendar/page';
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, differenceInDays, addDays } from 'date-fns';
 
-function getCycleDay() {
-  // Mock cycle day calculation
-  const startOfCycle = new Date(new Date().getFullYear(), new Date().getMonth(), 5);
+function getCycleDay(cycleData: any) {
+  if (!cycleData || cycleData.periods.length === 0) {
+    return 1;
+  }
+  const lastPeriodStart = new Date(cycleData.periods[cycleData.periods.length - 1].from);
   const today = new Date();
-  const diffTime = Math.abs(today.getTime() - startOfCycle.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return (diffDays % 28) + 1;
+  const diffDays = differenceInDays(today, lastPeriodStart);
+  return (diffDays % cycleData.cycleLength) + 1;
 }
 
-function getCyclePhase(day: number) {
-    if (day <= 5) return 'Menstrual Phase';
+
+function getCyclePhase(day: number, periodLength: number) {
+    if (day <= periodLength) return 'Menstrual Phase';
     if (day <= 13) return 'Follicular Phase';
     if (day <= 16) return 'Ovulation Phase';
     return 'Luteal Phase';
@@ -54,9 +56,10 @@ export default function DashboardPage() {
     const todayLog = logs[todayKey];
     setLog(todayLog);
 
-    const day = getCycleDay();
+    const cycleData = getCycleData();
+    const day = getCycleDay(cycleData);
     setCycleDay(day);
-    setCyclePhase(getCyclePhase(day));
+    setCyclePhase(getCyclePhase(day, cycleData.periodLength));
 
   }, []);
 
@@ -136,3 +139,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

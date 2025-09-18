@@ -62,23 +62,25 @@
     @apply bg-background text-foreground;
   }
   .period .rdp-button {
-    @apply bg-primary/20 text-primary-foreground;
+    @apply bg-primary/80 text-primary-foreground rounded-full;
   }
   .period .rdp-button:hover {
-     @apply bg-primary/30;
+     @apply bg-primary/90;
   }
   .period.rdp-day_today .rdp-button {
      @apply ring-primary;
   }
 
   .predicted .rdp-button {
-    @apply border border-dashed border-primary/50;
+    @apply border-2 border-dashed border-primary/50;
   }
   
   .fertile .rdp-button {
-    @apply bg-accent;
+    @apply bg-accent/80 rounded-full;
   }
   .fertile .rdp-button:hover {
-    @apply bg-accent/80;
+    @apply bg-accent/90;
   }
 }
+
+    

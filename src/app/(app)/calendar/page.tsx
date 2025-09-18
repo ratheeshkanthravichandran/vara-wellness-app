@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { addDays, format, startOfWeek, eachDayOfInterval } from 'date-fns';
-import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { addDays, format, eachDayOfInterval, differenceInDays, startOfDay } from 'date-fns';
+import type { DateRange } from 'react-day-picker';
+import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap, Repeat } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -24,15 +25,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+// --- Data Management ---
 
-// Mock data
-const today = new Date();
-const periodStart = new Date(today.getFullYear(), today.getMonth(), 5);
-const periodDays = Array.from({ length: 5 }, (_, i) => addDays(periodStart, i));
-const predictedPeriod = Array.from({ length: 5 }, (_, i) => addDays(new Date(today.getFullYear(), today.getMonth() + 1, 3), i));
-const fertileWindow = Array.from({ length: 6 }, (_, i) => addDays(new Date(today.getFullYear(), today.getMonth(), 15), i));
-
-const symptomsList = [
+const SYMPTOMS_LIST = [
     { id: 'cramps', label: 'Cramps' },
     { id: 'headache', label: 'Headache' },
     { id: 'mood-swings', label: 'Mood Swings' },
@@ -41,6 +36,10 @@ const symptomsList = [
     { id: 'acne', label: 'Acne' },
 ];
 
+const DEFAULT_CYCLE_LENGTH = 28;
+const DEFAULT_PERIOD_LENGTH = 5;
+
+
 export type LogData = {
     flow: 'none' | 'light' | 'medium' | 'heavy';
     symptoms: string[];
@@ -48,65 +47,125 @@ export type LogData = {
     energy: number; // Scale 1-10
 };
 
-export function getLogs() {
-  if (typeof window === 'undefined') {
-    return {};
-  }
+export type CycleData = {
+    periods: { from: string; to: string }[];
+    cycleLength: number;
+    periodLength: number;
+};
+
+export function getLogs(): Record<string, LogData> {
+  if (typeof window === 'undefined') return {};
   const savedLogs = window.localStorage.getItem('vara-cycle-logs');
   return savedLogs ? JSON.parse(savedLogs) : {};
 }
 
 export function saveLogs(logs: Record<string, LogData>) {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
   window.localStorage.setItem('vara-cycle-logs', JSON.stringify(logs));
 }
 
+export function getCycleData(): CycleData {
+    if (typeof window === 'undefined') {
+        const today = new Date();
+        const defaultStart = addDays(today, -10);
+        const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
+        return {
+            periods: [{ from: format(defaultStart, 'yyyy-MM-dd'), to: format(defaultEnd, 'yyyy-MM-dd') }],
+            cycleLength: DEFAULT_CYCLE_LENGTH,
+            periodLength: DEFAULT_PERIOD_LENGTH,
+        };
+    }
+
+    const savedData = window.localStorage.getItem('vara-cycle-data');
+    if (savedData) {
+        return JSON.parse(savedData);
+    }
+    // Create default data if none exists
+    const today = new Date();
+    const defaultStart = addDays(today, -10);
+    const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
+    const defaultCycleData = {
+        periods: [{ from: format(defaultStart, 'yyyy-MM-dd'), to: format(defaultEnd, 'yyyy-MM-dd') }],
+        cycleLength: DEFAULT_CYCLE_LENGTH,
+        periodLength: DEFAULT_PERIOD_LENGTH,
+    };
+    window.localStorage.setItem('vara-cycle-data', JSON.stringify(defaultCycleData));
+    return defaultCycleData;
+}
+
+export function saveCycleData(data: CycleData) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem('vara-cycle-data', JSON.stringify(data));
+}
+
+// --- Main Component ---
 
 export default function CalendarPage() {
-  const [date, setDate] = useState<Date | undefined>(today);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
   const [isLogOpen, setIsLogOpen] = useState(false);
-  
-  const [logs, setLogs] = useState<Record<string, LogData>>(() => {
-    const initialLogs = getLogs();
-     if (!initialLogs[format(new Date(), 'yyyy-MM-dd')]) {
-      initialLogs[format(new Date(), 'yyyy-MM-dd')] = {
-        flow: 'medium',
-        symptoms: ['cramps', 'fatigue'],
-        mood: 3,
-        energy: 5,
-      };
-    }
-    return initialLogs;
-  });
 
+  const [logs, setLogs] = useState<Record<string, LogData>>(() => getLogs());
+  const [cycleData, setCycleData] = useState<CycleData>(() => getCycleData());
+  
   const [selectedFlow, setSelectedFlow] = useState<'none' | 'light' | 'medium' | 'heavy'>('none');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedMood, setSelectedMood] = useState<number>(0);
   const [selectedEnergy, setSelectedEnergy] = useState<number>(0);
+
+  // --- Modifiers for Calendar Highlighting ---
+  const periodDays = cycleData.periods.flatMap(p => 
+    eachDayOfInterval({ start: new Date(p.from), end: new Date(p.to) })
+  );
+
+  const lastPeriodStart = cycleData.periods.length > 0
+    ? new Date(cycleData.periods[cycleData.periods.length - 1].from)
+    : new Date();
+
+  const predictedPeriodStart = addDays(lastPeriodStart, cycleData.cycleLength);
+  const predictedPeriod = eachDayOfInterval({
+      start: predictedPeriodStart,
+      end: addDays(predictedPeriodStart, cycleData.periodLength - 1),
+  });
+
+  const ovulationDay = addDays(predictedPeriodStart, -14);
+  const fertileWindow = eachDayOfInterval({
+      start: addDays(ovulationDay, -5),
+      end: ovulationDay,
+  });
 
   const modifiers = {
     period: periodDays,
     predicted: predictedPeriod,
     fertile: fertileWindow,
   };
+
   const modifiersClassNames = {
     period: 'period',
     predicted: 'predicted',
     fertile: 'fertile',
   };
 
-  const selectedDateKey = date ? format(date, 'yyyy-MM-dd') : '';
+  const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
   const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
+  
+  const handleDayClick = (day: Date, modifiers: { selected?: boolean }) => {
+    if (modifiers.selected) {
+      // If the clicked day is already selected, open the log dialog
+      handleOpenLog(day);
+    }
+  };
 
-  const handleOpenLog = () => {
-    setSelectedFlow(currentLog.flow);
-    setSelectedSymptoms(currentLog.symptoms);
-    setSelectedMood(currentLog.mood);
-    setSelectedEnergy(currentLog.energy);
+  const handleOpenLog = (date: Date) => {
+    setSelectedDate(date);
+    const logKey = format(date, 'yyyy-MM-dd');
+    const log = logs[logKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
+    setSelectedFlow(log.flow);
+    setSelectedSymptoms(log.symptoms);
+    setSelectedMood(log.mood);
+    setSelectedEnergy(log.energy);
     setIsLogOpen(true);
-  }
+  };
 
   const handleSaveLog = () => {
     if (selectedDateKey) {
@@ -125,6 +184,43 @@ export default function CalendarPage() {
     setIsLogOpen(false);
   };
 
+  const handleLogPeriod = () => {
+    if (selectedRange?.from && selectedRange?.to) {
+        const newPeriod = {
+            from: format(startOfDay(selectedRange.from), 'yyyy-MM-dd'),
+            to: format(startOfDay(selectedRange.to), 'yyyy-MM-dd'),
+        };
+
+        // Basic logic to update cycle and period length based on last two cycles
+        let newCycleLength = cycleData.cycleLength;
+        let newPeriodLength = cycleData.periodLength;
+
+        if (cycleData.periods.length > 0) {
+            const lastPeriod = cycleData.periods[cycleData.periods.length - 1];
+            const lastCycleLength = differenceInDays(new Date(newPeriod.from), new Date(lastPeriod.from));
+            if (lastCycleLength > 10 && lastCycleLength < 60) {
+                newCycleLength = Math.round((cycleData.cycleLength + lastCycleLength) / 2);
+            }
+        }
+        
+        const currentPeriodLength = differenceInDays(new Date(newPeriod.to), new Date(newPeriod.from)) + 1;
+        if(currentPeriodLength > 0 && currentPeriodLength < 15) {
+            newPeriodLength = Math.round((cycleData.periodLength + currentPeriodLength) / 2);
+        }
+
+        const updatedCycleData: CycleData = {
+            periods: [...cycleData.periods, newPeriod].sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()),
+            cycleLength: newCycleLength,
+            periodLength: newPeriodLength,
+        };
+        
+        setCycleData(updatedCycleData);
+        saveCycleData(updatedCycleData);
+        setSelectedRange(undefined);
+    }
+  };
+
+
   return (
     <div className="flex flex-1 flex-col">
        <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
@@ -136,14 +232,24 @@ export default function CalendarPage() {
        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6 lg:grid lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card>
-            <CardContent className="p-2">
+            <CardContent className="p-2 flex flex-col items-center">
                <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="w-full"
+                mode="range"
+                selected={selectedRange}
+                onSelect={setSelectedRange}
+                defaultMonth={selectedDate}
+                onDayClick={handleDayClick}
                 modifiers={modifiers}
                 modifiersClassNames={modifiersClassNames}
+                footer={
+                  selectedRange?.from && (
+                    <div className="px-4 pb-2">
+                       <Button onClick={handleLogPeriod} className="w-full">
+                        <Repeat className="w-4 h-4 mr-2" /> Log Period
+                      </Button>
+                    </div>
+                  )
+                }
               />
             </CardContent>
           </Card>
@@ -153,15 +259,15 @@ export default function CalendarPage() {
             </CardHeader>
             <CardContent className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md bg-primary/20"></div>
+                    <div className="w-4 h-4 rounded-full bg-primary/80"></div>
                     <span>Period</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md border border-dashed border-primary/50"></div>
+                    <div className="w-4 h-4 rounded-md border-2 border-dashed border-primary/50"></div>
                     <span>Predicted Period</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-md bg-accent"></div>
+                    <div className="w-4 h-4 rounded-full bg-accent/80"></div>
                     <span>Fertile Window</span>
                 </div>
             </CardContent>
@@ -171,16 +277,16 @@ export default function CalendarPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                        <span>{format(date || new Date(), 'MMMM d, yyyy')}</span>
+                        <span>{format(selectedDate || new Date(), 'MMMM d, yyyy')}</span>
                          <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={handleOpenLog}>
+                                <Button variant="ghost" size="icon" onClick={() => handleOpenLog(selectedDate || new Date())}>
                                     <PlusCircle className="w-5 h-5" />
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
-                                    <DialogTitle>Log for {format(date || new Date(), 'MMMM d, yyyy')}</DialogTitle>
+                                    <DialogTitle>Log for {format(selectedDate || new Date(), 'MMMM d, yyyy')}</DialogTitle>
                                 </DialogHeader>
                                 <div className="space-y-6 py-4">
                                      <div className="space-y-2">
@@ -195,7 +301,7 @@ export default function CalendarPage() {
                                     <div className="space-y-2">
                                         <Label>Symptoms</Label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {symptomsList.map(symptom => (
+                                            {SYMPTOMS_LIST.map(symptom => (
                                                  <div key={symptom.id} className="flex items-center space-x-2">
                                                     <Checkbox 
                                                         id={symptom.id}
@@ -288,3 +394,5 @@ export default function CalendarPage() {
     </div>
   );
 }
+
+    
