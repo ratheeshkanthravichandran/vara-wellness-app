@@ -31,17 +31,24 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
-export function askTiaraStream(
+export async function askTiaraStream(
   input: TiaraInput
-): ReadableStream<string> {
-  const { stream } = tiaraAssistantStreamFlow(input);
-  return stream.pipeThrough(
-    new TransformStream({
-      transform: (chunk, controller) => {
-        controller.enqueue(chunk.text);
-      },
-    })
-  );
+): Promise<ReadableStream<string>> {
+  return new ReadableStream({
+    async start(controller) {
+      try {
+        const { stream } = tiaraAssistantStreamFlow(input);
+
+        for await (const chunk of stream) {
+          controller.enqueue(chunk.text);
+        }
+      } catch (e) {
+        controller.error(e);
+      } finally {
+        controller.close();
+      }
+    },
+  });
 }
 
 
