@@ -2,11 +2,13 @@ import { ReliefSuggestionsForm } from './components/relief-suggestions-form';
 import { ActivityRecommendationsForm } from './components/activity-recommendations-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, Lightbulb } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function SuggestionsPage() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
+        <SidebarTrigger className="md:hidden" />
         <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-primary" />
           Personalized Suggestions

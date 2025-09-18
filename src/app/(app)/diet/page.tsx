@@ -1,10 +1,12 @@
 import { RecipeSuggestions } from './components/recipe-suggestions';
 import { Leaf } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function DietPage() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
+        <SidebarTrigger className="md:hidden" />
         <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
           <Leaf className="w-6 h-6 text-primary" />
           Diet &amp; Nutrition

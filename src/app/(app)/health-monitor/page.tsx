@@ -28,6 +28,7 @@ import { getLogs, type LogData } from '@/app/(app)/calendar/page';
 import { format, startOfWeek, eachDayOfInterval, parseISO, subDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 const chartConfig = {
   mood: {
@@ -78,9 +79,12 @@ export default function HealthMonitorPage() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">
-          Health Monitor
-        </h1>
+        <div className="flex items-center gap-4">
+            <SidebarTrigger className="md:hidden" />
+            <h1 className="text-lg font-semibold md:text-2xl font-headline">
+            Health Monitor
+            </h1>
+        </div>
         <Link href="/calendar">
           <Button variant="outline">
             <CalendarPlus className="mr-2 h-4 w-4" />

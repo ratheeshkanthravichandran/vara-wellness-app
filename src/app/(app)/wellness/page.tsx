@@ -4,15 +4,19 @@ import Image from 'next/image';
 import { BrainCircuit, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function WellnessPage() {
   return (
     <div className="flex flex-1 flex-col">
        <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
-            <BrainCircuit className="w-6 h-6 text-primary" />
-            Wellness Journey
-        </h1>
+        <div className="flex items-center gap-4">
+            <SidebarTrigger className="md:hidden" />
+            <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
+                <BrainCircuit className="w-6 h-6 text-primary" />
+                Wellness Journey
+            </h1>
+        </div>
         <Link href="/suggestions">
           <Button>
             <Sparkles className="mr-2 h-4 w-4" />

@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 function getCycleDay(cycleData: CycleData | null): number {
     if (!cycleData || cycleData.periods.length === 0) {
@@ -86,9 +87,12 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">
-          Dashboard
-        </h1>
+        <div className="flex items-center gap-4">
+            <SidebarTrigger className="md:hidden" />
+            <h1 className="text-lg font-semibold md:text-2xl font-headline">
+            Dashboard
+            </h1>
+        </div>
         <Link href="/calendar">
           <Button variant="outline">
             <CalendarPlus className="mr-2 h-4 w-4" />
