@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { addDays, format } from 'date-fns';
-import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon } from 'lucide-react';
+import { addDays, format, startOfWeek, eachDayOfInterval } from 'date-fns';
+import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,14 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 
 // Mock data
 const today = new Date();
@@ -33,22 +41,50 @@ const symptomsList = [
     { id: 'acne', label: 'Acne' },
 ];
 
-type LogData = {
+export type LogData = {
     flow: 'none' | 'light' | 'medium' | 'heavy';
     symptoms: string[];
+    mood: number; // Scale 1-5
+    energy: number; // Scale 1-10
 };
+
+export function getLogs() {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+  const savedLogs = window.localStorage.getItem('vara-cycle-logs');
+  return savedLogs ? JSON.parse(savedLogs) : {};
+}
+
+export function saveLogs(logs: Record<string, LogData>) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  window.localStorage.setItem('vara-cycle-logs', JSON.stringify(logs));
+}
+
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(today);
   const [isLogOpen, setIsLogOpen] = useState(false);
-  const [logs, setLogs] = useState<Record<string, LogData>>({
-    [format(new Date(), 'yyyy-MM-dd')]: {
-      flow: 'medium',
-      symptoms: ['cramps', 'fatigue'],
-    },
+  
+  const [logs, setLogs] = useState<Record<string, LogData>>(() => {
+    const initialLogs = getLogs();
+     if (!initialLogs[format(new Date(), 'yyyy-MM-dd')]) {
+      initialLogs[format(new Date(), 'yyyy-MM-dd')] = {
+        flow: 'medium',
+        symptoms: ['cramps', 'fatigue'],
+        mood: 3,
+        energy: 5,
+      };
+    }
+    return initialLogs;
   });
+
   const [selectedFlow, setSelectedFlow] = useState<'none' | 'light' | 'medium' | 'heavy'>('none');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [selectedMood, setSelectedMood] = useState<number>(0);
+  const [selectedEnergy, setSelectedEnergy] = useState<number>(0);
 
   const modifiers = {
     period: periodDays,
@@ -62,23 +98,29 @@ export default function CalendarPage() {
   };
 
   const selectedDateKey = date ? format(date, 'yyyy-MM-dd') : '';
-  const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [] };
+  const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
 
   const handleOpenLog = () => {
     setSelectedFlow(currentLog.flow);
     setSelectedSymptoms(currentLog.symptoms);
+    setSelectedMood(currentLog.mood);
+    setSelectedEnergy(currentLog.energy);
     setIsLogOpen(true);
   }
 
   const handleSaveLog = () => {
     if (selectedDateKey) {
-      setLogs({
+      const updatedLogs = {
         ...logs,
         [selectedDateKey]: {
           flow: selectedFlow,
           symptoms: selectedSymptoms,
+          mood: selectedMood,
+          energy: selectedEnergy,
         },
-      });
+      };
+      setLogs(updatedLogs);
+      saveLogs(updatedLogs);
     }
     setIsLogOpen(false);
   };
@@ -136,7 +178,7 @@ export default function CalendarPage() {
                                     <PlusCircle className="w-5 h-5" />
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>Log for {format(date || new Date(), 'MMMM d, yyyy')}</DialogTitle>
                                 </DialogHeader>
@@ -170,6 +212,28 @@ export default function CalendarPage() {
                                             ))}
                                         </div>
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label>Mood (1 = Low, 5 = Great)</Label>
+                                        <Select value={String(selectedMood)} onValueChange={(val) => setSelectedMood(Number(val))}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Rate your mood" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {[1,2,3,4,5].map(v => <SelectItem key={v} value={String(v)}>{v}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label>Energy (1 = Low, 10 = High)</Label>
+                                         <Select value={String(selectedEnergy)} onValueChange={(val) => setSelectedEnergy(Number(val))}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Rate your energy" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {Array.from({length: 10}, (_,i) => i+1).map(v => <SelectItem key={v} value={String(v)}>{v}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                     <Button className="w-full" onClick={handleSaveLog}>Save Log</Button>
                                 </div>
                             </DialogContent>
@@ -196,6 +260,24 @@ export default function CalendarPage() {
                                 <p className="text-muted-foreground text-sm capitalize">
                                     {currentLog.symptoms.length > 0 ? currentLog.symptoms.join(', ') : 'None'}
                                 </p>
+                            </div>
+                        </div>
+                         <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                                <Heart className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                                <p className="font-medium">Mood</p>
+                                <p className="text-muted-foreground text-sm">{currentLog.mood > 0 ? `${currentLog.mood}/5` : 'Not logged'}</p>
+                            </div>
+                        </div>
+                         <div className="flex items-start gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                                <Zap className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                                <p className="font-medium">Energy</p>
+                                <p className="text-muted-foreground text-sm">{currentLog.energy > 0 ? `${currentLog.energy}/10` : 'Not logged'}</p>
                             </div>
                         </div>
                     </div>

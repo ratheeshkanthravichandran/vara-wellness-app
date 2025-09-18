@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { BarChart, LineChart } from 'lucide-react';
 import Image from 'next/image';
 import {
@@ -12,8 +13,6 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
 } from '@/components/ui/chart';
 import {
   Bar,
@@ -24,28 +23,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
-
-const moodData = [
-  { date: 'Mon', mood: 3 },
-  { date: 'Tue', mood: 4 },
-  { date: 'Wed', mood: 2 },
-  { date: 'Thu', mood: 5 },
-  { date: 'Fri', mood: 4 },
-  { date: 'Sat', mood: 3 },
-  { date: 'Sun', mood: 5 },
-];
-
-const energyData = [
-  { date: 'Mon', energy: 6 },
-  { date: 'Tue', energy: 7 },
-  { date: 'Wed', energy: 5 },
-  { date: 'Thu', energy: 8 },
-  { date: 'Fri', energy: 7 },
-  { date: 'Sat', energy: 6 },
-  { date: 'Sun', energy: 9 },
-];
+import { getLogs, type LogData } from '@/app/(app)/calendar/page';
+import { format, startOfWeek, eachDayOfInterval, parseISO } from 'date-fns';
 
 const chartConfig = {
   mood: {
@@ -59,6 +39,40 @@ const chartConfig = {
 };
 
 export default function HealthMonitorPage() {
+  const [moodData, setMoodData] = useState<any[]>([]);
+  const [energyData, setEnergyData] = useState<any[]>([]);
+
+  useEffect(() => {
+    const logs = getLogs();
+    const today = new Date();
+    const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    const weekDays = eachDayOfInterval({
+      start: startOfThisWeek,
+      end: today,
+    });
+
+    const formattedMoodData = weekDays.map((day) => {
+      const dayKey = format(day, 'yyyy-MM-dd');
+      const log: LogData | undefined = logs[dayKey];
+      return {
+        date: format(day, 'EEE'), // Mon, Tue, etc.
+        mood: log ? log.mood : null,
+      };
+    });
+
+    const formattedEnergyData = weekDays.map((day) => {
+      const dayKey = format(day, 'yyyy-MM-dd');
+      const log: LogData | undefined = logs[dayKey];
+      return {
+        date: format(day, 'EEE'),
+        energy: log ? log.energy : null,
+      };
+    });
+
+    setMoodData(formattedMoodData);
+    setEnergyData(formattedEnergyData);
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
@@ -95,7 +109,7 @@ export default function HealthMonitorPage() {
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-64 w-full">
-                <RechartsLineChart data={moodData}>
+                <RechartsLineChart data={moodData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="date" tickLine={false} axisLine={false} />
                   <YAxis domain={[0, 5]} tickLine={false} axisLine={false} />
@@ -109,6 +123,7 @@ export default function HealthMonitorPage() {
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                    connectNulls
                   />
                 </RechartsLineChart>
               </ChartContainer>
@@ -122,7 +137,7 @@ export default function HealthMonitorPage() {
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-64 w-full">
-                <RechartsBarChart data={energyData}>
+                <RechartsBarChart data={energyData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                   <CartesianGrid vertical={false} />
                   <XAxis dataKey="date" tickLine={false} axisLine={false} />
                   <YAxis domain={[0, 10]} tickLine={false} axisLine={false} />
