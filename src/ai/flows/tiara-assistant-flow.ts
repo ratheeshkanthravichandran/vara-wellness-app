@@ -9,7 +9,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { from, of, readableStreamFromAsyncIterator } from 'genkit';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -94,6 +93,6 @@ const tiaraAssistantStreamFlow = ai.defineFlow(
   },
   async (input) => {
     const { stream } = await prompt(input);
-    return from(stream).pipe(chunk => chunk.text);
+    return stream.pipe(chunk => chunk.text);
   }
 );
