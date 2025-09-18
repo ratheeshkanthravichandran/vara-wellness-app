@@ -10,8 +10,15 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { LogData } from '@/app/(app)/calendar/page';
 
-export function TodaySuggestions() {
+function getEnergyLabel(level: number | undefined){
+    if (!level || level <= 3) return 'low';
+    if (level <= 7) return 'medium';
+    return 'high';
+}
+
+export function TodaySuggestions({log, cyclePhase}: {log: LogData, cyclePhase: string}) {
   const [loading, setLoading] = useState(true);
   const [result, setResult] =
     useState<TailoredActivityRecommendationsOutput | null>(null);
@@ -19,13 +26,14 @@ export function TodaySuggestions() {
 
   useEffect(() => {
     async function getSuggestions() {
+      if (!log) return;
       setLoading(true);
       setError(null);
       try {
         const res = await tailoredActivityRecommendations({
-          cyclePhase: 'menstruation',
-          energyLevels: 'low',
-          symptomDescription: 'mild cramps',
+          cyclePhase: cyclePhase,
+          energyLevels: getEnergyLabel(log.energy),
+          symptomDescription: log.symptoms.join(', '),
         });
         setResult(res);
       } catch (error) {
@@ -37,7 +45,7 @@ export function TodaySuggestions() {
       }
     }
     getSuggestions();
-  }, []);
+  }, [log, cyclePhase]);
 
   return (
     <div className="space-y-4">
