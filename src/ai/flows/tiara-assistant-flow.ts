@@ -28,7 +28,20 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
 
 export async function askTiaraStream(input: TiaraInput) {
   const { stream } = await tiaraAssistantStreamFlow(input);
-  return stream;
+
+  const newStream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        if (chunk.content) {
+          const text = chunk.content.map((c) => c.text || '').join('');
+          controller.enqueue(text);
+        }
+      }
+      controller.close();
+    },
+  });
+
+  return newStream;
 }
 
 const prompt = ai.definePrompt({

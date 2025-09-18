@@ -45,11 +45,12 @@ export default function AssistantPage() {
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-        // Find the viewport element within the ScrollArea
-        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-        if (viewport) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
+      const viewport = scrollAreaRef.current.querySelector(
+        '[data-radix-scroll-area-viewport]',
+      );
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
     }
   }, [conversation]);
 
@@ -66,21 +67,22 @@ export default function AssistantPage() {
       sender: 'tiara',
       text: '',
     };
-    setConversation((prev) => [...prev, userMessage, initialTiaraMessage]);
+    setConversation(prev => [...prev, userMessage, initialTiaraMessage]);
     form.reset();
 
     try {
       const stream = await askTiaraStream(values);
+      const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
       let fullResponse = '';
 
-      for await (const chunk of stream) {
-        if (chunk.content) {
-            fullResponse = chunk.content.map((c: any) => c.text || '').join('');
-        }
-        setConversation((prev) =>
-          prev.map((msg) =>
-            msg.id === tiaraMessageId ? { ...msg, text: fullResponse } : msg
-          )
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        fullResponse += value;
+        setConversation(prev =>
+          prev.map(msg =>
+            msg.id === tiaraMessageId ? { ...msg, text: fullResponse } : msg,
+          ),
         );
       }
     } catch (error) {
@@ -91,7 +93,7 @@ export default function AssistantPage() {
           error instanceof Error ? error.message : 'Please try again.',
       });
       // Remove both user's and tiara's placeholder message on error
-      setConversation((prev) => prev.slice(0, -2));
+      setConversation(prev => prev.slice(0, -2));
     } finally {
       setLoading(false);
     }
@@ -122,7 +124,7 @@ export default function AssistantPage() {
                     <p>Ask anything, or start a discussion on any topic.</p>
                   </div>
                 )}
-                {conversation.map((msg) => (
+                {conversation.map(msg => (
                   <div
                     key={msg.id}
                     className={`flex items-start gap-3 ${
@@ -144,9 +146,13 @@ export default function AssistantPage() {
                       }`}
                     >
                       {msg.text ? (
-                         <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {msg.text}
+                        </p>
                       ) : (
-                        <p className="text-sm text-muted-foreground animate-pulse">Tiara is thinking...</p>
+                        <p className="text-sm text-muted-foreground animate-pulse">
+                          Tiara is thinking...
+                        </p>
                       )}
                     </div>
                     {msg.sender === 'user' && (
@@ -175,7 +181,7 @@ export default function AssistantPage() {
                             className="min-h-[40px] resize-none"
                             rows={1}
                             {...field}
-                            onKeyDown={(e) => {
+                            onKeyDown={e => {
                               if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
                                 form.handleSubmit(onSubmit)();
