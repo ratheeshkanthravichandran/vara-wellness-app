@@ -46,7 +46,7 @@ const tiaraAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     const result = await prompt(input);
-    const response = result.text();
+    const response = result.text;
     return { response };
   }
 );
