@@ -25,7 +25,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { getLogs, type LogData } from '@/app/(app)/calendar/page';
-import { format, startOfWeek, eachDayOfInterval, parseISO } from 'date-fns';
+import { format, startOfWeek, eachDayOfInterval, parseISO, subDays } from 'date-fns';
 
 const chartConfig = {
   mood: {
@@ -45,9 +45,9 @@ export default function HealthMonitorPage() {
   useEffect(() => {
     const logs = getLogs();
     const today = new Date();
-    const startOfThisWeek = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    // Get the last 7 days including today
     const weekDays = eachDayOfInterval({
-      start: startOfThisWeek,
+      start: subDays(today, 6),
       end: today,
     });
 
