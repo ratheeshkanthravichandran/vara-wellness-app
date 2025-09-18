@@ -46,7 +46,7 @@ User's message:
 
 Your response:
 `,
-  tools: [googleAI.googleSearch],
+  tools: [googleAI.googleSearch()],
 });
 
 const tiaraAssistantFlow = ai.defineFlow(
