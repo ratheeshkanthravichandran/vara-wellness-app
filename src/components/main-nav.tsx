@@ -21,8 +21,8 @@ const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/health-monitor', label: 'Health Monitor', icon: HeartPulse },
-  { href: '/wellness', label: 'Wellness Journey', icon: BrainCircuit },
-  { href: '/diet', label: 'Diet & Nutrition', icon: Leaf },
+  { href: '/wellness', label: 'Wellness', icon: BrainCircuit },
+  { href: '/diet', label: 'Diet', icon: Leaf },
   { href: '/suggestions', label: 'Suggestions', icon: Sparkles },
 ];
 
@@ -37,10 +37,9 @@ export function MainNav() {
             <SidebarMenuButton
               isActive={pathname.startsWith(item.href)}
               tooltip={item.label}
-              className="group-data-[collapsible=icon]:justify-center"
             >
               <item.icon />
-              <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+              <span className="group-data-[state=collapsed]:hidden">{item.label}</span>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>

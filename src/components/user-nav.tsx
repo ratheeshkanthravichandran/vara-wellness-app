@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -10,20 +12,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { Settings, LogOut } from 'lucide-react';
+import { useSidebar } from './ui/sidebar';
 
 export function UserNav() {
+  const { state } = useSidebar();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative h-12 w-full justify-start gap-2 px-2 group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+          className="relative h-12 w-full justify-start gap-4 px-2 group-data-[state=collapsed]:size-12 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:p-0"
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-10 w-10">
             <AvatarImage data-ai-hint="person portrait" src="https://picsum.photos/seed/user-avatar/40/40" alt="@user" />
             <AvatarFallback>U</AvatarFallback>
           </Avatar>
-          <div className="group-data-[collapsible=icon]:hidden text-left">
+          <div className="group-data-[state=collapsed]:hidden text-left">
             <p className="text-sm font-medium leading-none">Jane Doe</p>
             <p className="text-xs leading-none text-muted-foreground">
               jane.doe@example.com
