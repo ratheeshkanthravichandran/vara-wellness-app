@@ -66,7 +66,7 @@ export default function AssistantPage() {
         history: newConversation.slice(0, -1),
         message: userMessage.content,
       });
-
+      
       const reader = stream.getReader();
       const decoder = new TextDecoder();
       let done = false;

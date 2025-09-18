@@ -2,7 +2,8 @@
 /**
  * @fileOverview Defines a Genkit flow for a general-purpose AI assistant named Tiara.
  *
- * - `askTiara` - The exported function to trigger the flow.
+ * - `askTiara` - The exported function to trigger the non-streaming flow.
+ * - `askTiaraStream` - The exported function to trigger the streaming flow.
  * - `TiaraInput` - The input type for the flow.
  * - `TiaraOutput` - The output type for the flow.
  */
@@ -32,14 +33,16 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
 
 export async function askTiaraStream(
   input: TiaraInput
-): Promise<ReadableStream<string>> {
+): Promise<ReadableStream<Uint8Array>> {
   const { stream } = tiaraAssistantStreamFlow(input);
 
   const encoder = new TextEncoder();
   const readableStream = new ReadableStream({
     async start(controller) {
       for await (const chunk of stream) {
-        controller.enqueue(encoder.encode(chunk));
+        if (chunk) {
+          controller.enqueue(encoder.encode(chunk));
+        }
       }
       controller.close();
     },
