@@ -72,13 +72,14 @@ export default function AssistantPage() {
 
     try {
       const stream = await askTiaraStream(values);
-      const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
       let fullResponse = '';
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        fullResponse += value;
+        fullResponse += decoder.decode(value, { stream: true });
         setConversation(prev =>
           prev.map(msg =>
             msg.id === tiaraMessageId ? { ...msg, text: fullResponse } : msg,
