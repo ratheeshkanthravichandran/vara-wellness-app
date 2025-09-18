@@ -27,9 +27,9 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
 }
 
 export async function askTiaraStream(input: TiaraInput) {
-  const { stream } = await tiaraAssistantStreamFlow(input);
-  const encoder = new TextEncoder();
+  const { stream, response } = tiaraAssistantStreamFlow(input);
 
+  const encoder = new TextEncoder();
   const newStream = new ReadableStream({
     async start(controller) {
       for await (const chunk of stream) {
