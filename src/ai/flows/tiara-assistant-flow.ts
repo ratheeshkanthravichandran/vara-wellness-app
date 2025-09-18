@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleSearch } from '@genkit-ai/googleai';
 
 const TiaraInputSchema = z.object({
   message: z.string().describe('The user\'s message or question to Tiara.'),
@@ -27,7 +27,7 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
 }
 
 export async function askTiaraStream(input: TiaraInput) {
-  const { stream } = tiaraAssistantStreamFlow(input);
+  const { stream } = await tiaraAssistantStreamFlow(input);
   return stream;
 }
 
@@ -46,7 +46,7 @@ User's message:
 
 Your response:
 `,
-  tools: [googleAI.search()],
+  tools: [googleSearch],
 });
 
 const tiaraAssistantFlow = ai.defineFlow(
