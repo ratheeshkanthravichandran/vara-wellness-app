@@ -9,6 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'zod';
 
 const MessageSchema = z.object({
@@ -31,35 +32,25 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
-export async function askTiaraStream(
+export function askTiaraStream(
   input: TiaraInput
-): Promise<ReadableStream<Uint8Array>> {
+): ReadableStream<string> {
   const { stream } = tiaraAssistantStreamFlow(input);
-
-  const encoder = new TextEncoder();
-  const readableStream = new ReadableStream({
-    async start(controller) {
-      for await (const chunk of stream) {
-        if (chunk) {
-          controller.enqueue(encoder.encode(chunk));
-        }
-      }
-      controller.close();
-    },
-  });
-
-  return readableStream;
+  return stream.pipe(chunk => chunk.text);
 }
+
 
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
-  tools: ['googleSearch'],
+  tools: [googleAI.googleSearch],
   prompt: `You are Tiara, a compassionate, helpful, and friendly AI assistant integrated into the Vara wellness app.
 
-Your role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
+Your primary role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
 
-If you don't know the answer to a question, use the provided Google Search tool to find the most up-to-date and relevant information.
+Your knowledge is based on information up to your last update, but you have access to real-time information from the internet through a search tool. You should use this tool whenever a user asks a question that you cannot answer from your internal knowledge, especially for recent events or specific people.
+
+When using the search tool, you do not need to mention that you are searching. Simply provide the answer to the user as if you knew it.
 
 {{#if history}}
 Conversation History:
@@ -83,8 +74,7 @@ const tiaraAssistantFlow = ai.defineFlow(
   },
   async (input) => {
     const result = await prompt(input);
-    const response = result.text;
-    return { response };
+    return { response: result.text };
   }
 );
 
@@ -96,6 +86,6 @@ const tiaraAssistantStreamFlow = ai.defineFlow(
   },
   async (input) => {
     const { stream } = await prompt(input);
-    return stream.pipe(chunk => chunk.text);
+    return stream;
   }
 );

@@ -47,50 +47,41 @@ export default function AssistantPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!currentMessage.trim() || loading) return;
-
+  
     setLoading(true);
     const userMessage: Message = { role: 'user', content: currentMessage };
     const newConversation = [...conversation, userMessage];
     setConversation(newConversation);
     setCurrentMessage('');
-
-    let accumulatedResponse = '';
-    const tiaraMessage: Message = {
-      role: 'model',
-      content: 'Tiara is thinking...',
-    };
-    setConversation((prev) => [...prev, tiaraMessage]);
-
+  
+    // Add a placeholder for the model's response
+    setConversation((prev) => [
+      ...prev,
+      { role: 'model', content: '' },
+    ]);
+  
     try {
       const stream = await askTiaraStream({
         history: newConversation.slice(0, -1),
         message: userMessage.content,
       });
-      
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let done = false;
-
-      setConversation((prev) =>
-        prev.map((msg, index) =>
-          index === prev.length - 1 ? { ...msg, content: '' } : msg,
-        ),
-      );
-
-      while (!done) {
-        const { value, done: readerDone } = await reader.read();
-        done = readerDone;
-        if (value) {
-          accumulatedResponse += decoder.decode(value, { stream: true });
-          setConversation((prev) =>
-            prev.map((msg, index) =>
-              index === prev.length - 1
-                ? { ...msg, content: accumulatedResponse }
-                : msg,
-            ),
-          );
-          scrollToBottom();
-        }
+  
+      const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+  
+      let accumulatedResponse = '';
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+  
+        accumulatedResponse += value;
+        setConversation((prev) =>
+          prev.map((msg, index) =>
+            index === prev.length - 1
+              ? { ...msg, content: accumulatedResponse }
+              : msg,
+          ),
+        );
+        scrollToBottom();
       }
     } catch (error) {
       toast({
@@ -99,7 +90,8 @@ export default function AssistantPage() {
         description:
           error instanceof Error ? error.message : 'Please try again.',
       });
-      setConversation((prev) => prev.slice(0, -1)); // Remove the thinking message
+      // Remove the empty model message on error
+      setConversation((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
     }
@@ -145,18 +137,18 @@ export default function AssistantPage() {
                       </Avatar>
                     )}
                     <div
-                      className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      className={`rounded-lg px-4 py-2 max-w-[80%] whitespace-pre-wrap ${
                         msg.role === 'user'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
                       }`}
                     >
-                      {msg.content === 'Tiara is thinking...' ? (
+                      {msg.content === '' && msg.role === 'model' && loading ? (
                         <p className="text-sm text-muted-foreground animate-pulse">
-                          {msg.content}
+                          Tiara is thinking...
                         </p>
                       ) : (
-                        <p className="text-sm whitespace-pre-wrap">
+                        <p className="text-sm">
                           {msg.content}
                         </p>
                       )}
