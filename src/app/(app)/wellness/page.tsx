@@ -1,16 +1,24 @@
 import { WellnessJournal } from './components/wellness-journal';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
-import { BrainCircuit } from 'lucide-react';
+import { BrainCircuit, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function WellnessPage() {
   return (
     <div className="flex flex-1 flex-col">
-       <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
+       <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
         <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
             <BrainCircuit className="w-6 h-6 text-primary" />
             Wellness Journey
         </h1>
+        <Link href="/suggestions">
+          <Button>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Get Suggestions
+          </Button>
+        </Link>
       </header>
        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
         <div className="grid gap-6 lg:grid-cols-5">

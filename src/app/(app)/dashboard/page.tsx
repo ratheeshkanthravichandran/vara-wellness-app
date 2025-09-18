@@ -7,11 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Droplet, Zap, Heart, Brain } from 'lucide-react';
+import { Droplet, Zap, Heart, Brain, CalendarPlus } from 'lucide-react';
 import { TodaySuggestions } from './components/today-suggestions';
 import { getLogs, getCycleData, type CycleData, type LogData } from '@/app/(app)/calendar/page';
 import { useState, useEffect } from 'react';
 import { format, differenceInDays, addDays } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 function getCycleDay(cycleData: CycleData | null): number {
     if (!cycleData || cycleData.periods.length === 0) {
@@ -83,10 +85,16 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
+      <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
         <h1 className="text-lg font-semibold md:text-2xl font-headline">
           Dashboard
         </h1>
+        <Link href="/calendar">
+          <Button variant="outline">
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            Log Today's Data
+          </Button>
+        </Link>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -152,6 +160,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
-    

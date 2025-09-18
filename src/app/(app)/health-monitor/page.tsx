@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { BarChart, LineChart } from 'lucide-react';
+import { BarChart, LineChart, CalendarPlus } from 'lucide-react';
 import Image from 'next/image';
 import {
   Card,
@@ -26,6 +26,8 @@ import {
 } from 'recharts';
 import { getLogs, type LogData } from '@/app/(app)/calendar/page';
 import { format, startOfWeek, eachDayOfInterval, parseISO, subDays } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const chartConfig = {
   mood: {
@@ -75,10 +77,16 @@ export default function HealthMonitorPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
+      <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
         <h1 className="text-lg font-semibold md:text-2xl font-headline">
           Health Monitor
         </h1>
+        <Link href="/calendar">
+          <Button variant="outline">
+            <CalendarPlus className="mr-2 h-4 w-4" />
+            Go to Calendar
+          </Button>
+        </Link>
       </header>
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
         <Card className="relative overflow-hidden">

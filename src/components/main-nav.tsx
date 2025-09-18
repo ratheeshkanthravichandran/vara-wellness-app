@@ -15,6 +15,7 @@ import {
   Leaf,
   Sparkles,
   BrainCircuit,
+  CalendarPlus,
 } from 'lucide-react';
 
 const menuItems = [
