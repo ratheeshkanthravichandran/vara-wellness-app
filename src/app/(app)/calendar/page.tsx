@@ -332,7 +332,7 @@ export default function CalendarPage() {
                                          <Select value={String(selectedEnergy)} onValueChange={(val) => setSelectedEnergy(Number(val))}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Rate your energy" />
-                                            </SelectTrigger>
+                                            </Trigger>
                                             <SelectContent>
                                                 {Array.from({length: 10}, (_,i) => i+1).map(v => <SelectItem key={v} value={String(v)}>{v}</SelectItem>)}
                                             </SelectContent>
@@ -392,6 +392,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-    
-
-    
