@@ -1,32 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Droplet, Zap, Heart, Brain } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
 
-const suggestions = [
-  {
-    title: 'Gentle Yoga',
-    description: 'Ease cramps and boost your mood with a gentle yoga flow.',
-    image: 'https://picsum.photos/seed/yoga/300/200',
-    imageHint: 'yoga meditation',
-    link: '#',
-  },
-  {
-    title: 'Nourishing Tea',
-    description: 'Sip on some raspberry leaf tea to help with uterine health.',
-    image: 'https://picsum.photos/seed/tea/300/200',
-    imageHint: 'tea cup',
-    link: '#',
-  },
-  {
-    title: 'Mindful Moment',
-    description: 'Take 5 minutes for a guided meditation to reduce stress.',
-    image: 'https://picsum.photos/seed/mindful/300/200',
-    imageHint: 'calm nature',
-    link: '#',
-  },
-];
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Droplet, Zap, Heart, Brain } from 'lucide-react';
+import { TodaySuggestions } from './components/today-suggestions';
 
 export default function DashboardPage() {
   return (
@@ -85,39 +60,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight font-headline">Today's Suggestions</h2>
-            <Link href="/suggestions">
-              <Button variant="outline">View More</Button>
-            </Link>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {suggestions.map((suggestion, index) => (
-              <Card key={index} className="overflow-hidden flex flex-col">
-                <Image
-                  src={suggestion.image}
-                  alt={suggestion.title}
-                  width={300}
-                  height={200}
-                  className="w-full h-40 object-cover"
-                  data-ai-hint={suggestion.imageHint}
-                />
-                <div className="flex flex-col flex-grow">
-                  <CardHeader>
-                    <CardTitle>{suggestion.title}</CardTitle>
-                    <CardDescription>{suggestion.description}</CardDescription>
-                  </CardHeader>
-                  <CardFooter className="mt-auto">
-                    <Button asChild>
-                      <Link href={suggestion.link}>Learn More</Link>
-                    </Button>
-                  </CardFooter>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
+        <TodaySuggestions />
       </main>
     </div>
   );
