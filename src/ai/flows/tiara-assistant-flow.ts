@@ -10,10 +10,10 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleSearch } from '@genkit-ai/googleai';
+import { googleSearch } from '@genkit-ai/googleai/tools';
 
 const TiaraInputSchema = z.object({
-  message: z.string().describe('The user\'s message or question to Tiara.'),
+  message: z.string().describe("The user's message or question to Tiara."),
 });
 export type TiaraInput = z.infer<typeof TiaraInputSchema>;
 
