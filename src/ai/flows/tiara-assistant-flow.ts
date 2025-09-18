@@ -10,7 +10,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/googleai';
 
 const TiaraInputSchema = z.object({
   message: z.string().describe("The user's message or question to Tiara."),
@@ -58,7 +57,6 @@ User's message:
 
 Your response:
 `,
-  tools: [googleAI.googleSearch],
 });
 
 const tiaraAssistantFlow = ai.defineFlow(
