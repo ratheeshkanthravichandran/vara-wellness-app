@@ -108,20 +108,21 @@ export function saveCycleData(data: CycleData) {
 
 // --- Main Component ---
 export default function CalendarPage() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
   const [isLogOpen, setIsLogOpen] = useState(false);
   
-  const [logs, setLogs] = useState<Record<string, LogData>>({});
-  const [cycleData, setCycleData] = useState<CycleData>({ periods: [], cycleLength: DEFAULT_CYCLE_LENGTH, periodLength: DEFAULT_PERIOD_LENGTH });
+  const [logs, setLogs] = useState<Record<string, LogData> | null>(null);
+  const [cycleData, setCycleData] = useState<CycleData | null>(null);
   
   const [selectedFlow, setSelectedFlow] = useState<'none' | 'light' | 'medium' | 'heavy'>('none');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedMood, setSelectedMood] = useState<number>(0);
   const [selectedEnergy, setSelectedEnergy] = useState<number>(0);
-
-  // Load data from localStorage on component mount
+  
+  // Load data from localStorage on component mount on client side
   useEffect(() => {
+    setSelectedDate(new Date());
     setLogs(getLogs());
     setCycleData(getCycleData());
   }, []);
@@ -132,6 +133,7 @@ export default function CalendarPage() {
 
   const handleOpenLog = (date: Date) => {
     setSelectedDate(date);
+    if (!logs) return;
     const logKey = format(date, 'yyyy-MM-dd');
     const log = logs[logKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
     setSelectedFlow(log.flow);
@@ -146,7 +148,7 @@ export default function CalendarPage() {
   const handleSaveLog = () => {
     if (selectedDateKey) {
       const updatedLogs = {
-        ...logs,
+        ...(logs || {}),
         [selectedDateKey]: {
           flow: selectedFlow,
           symptoms: selectedSymptoms,
@@ -161,7 +163,7 @@ export default function CalendarPage() {
   };
 
   const handleLogPeriod = () => {
-    if (selectedRange?.from && selectedRange?.to) {
+    if (selectedRange?.from && selectedRange?.to && cycleData) {
         const newPeriod = {
             from: format(startOfDay(selectedRange.from), 'yyyy-MM-dd'),
             to: format(startOfDay(selectedRange.to), 'yyyy-MM-dd'),
@@ -197,18 +199,18 @@ export default function CalendarPage() {
   };
 
   // --- Modifiers for Calendar Highlighting ---
-  const periodDays = cycleData.periods.flatMap(p => 
+  const periodDays = cycleData?.periods.flatMap(p => 
     eachDayOfInterval({ start: new Date(p.from), end: new Date(p.to) })
-  );
+  ) || [];
 
-  const lastPeriodStart = cycleData.periods.length > 0
+  const lastPeriodStart = cycleData && cycleData.periods.length > 0
     ? new Date(cycleData.periods[cycleData.periods.length - 1].from)
     : new Date();
 
-  const predictedPeriodStart = addDays(lastPeriodStart, cycleData.cycleLength);
+  const predictedPeriodStart = addDays(lastPeriodStart, cycleData?.cycleLength || DEFAULT_CYCLE_LENGTH);
   const predictedPeriod = eachDayOfInterval({
       start: predictedPeriodStart,
-      end: addDays(predictedPeriodStart, cycleData.periodLength - 1),
+      end: addDays(predictedPeriodStart, (cycleData?.periodLength || DEFAULT_PERIOD_LENGTH) - 1),
   });
 
   const ovulationDay = addDays(predictedPeriodStart, -14);
@@ -228,6 +230,14 @@ export default function CalendarPage() {
     predicted: 'predicted',
     fertile: 'fertile',
   };
+
+  if (!logs || !cycleData) {
+    return (
+        <div className="flex flex-1 flex-col items-center justify-center">
+            <p>Loading your calendar...</p>
+        </div>
+    );
+  }
 
   const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
   
