@@ -14,12 +14,14 @@ import {
   HeartPulse,
   Leaf,
   Sparkles,
+  BrainCircuit,
 } from 'lucide-react';
 
 const menuItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/health-monitor', label: 'Health Monitor', icon: HeartPulse },
+  { href: '/wellness', label: 'Wellness Journey', icon: BrainCircuit },
   { href: '/diet', label: 'Diet & Nutrition', icon: Leaf },
   { href: '/suggestions', label: 'Suggestions', icon: Sparkles },
 ];
