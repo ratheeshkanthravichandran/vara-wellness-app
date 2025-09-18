@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { addDays, format } from 'date-fns';
-import { Brain, PlusCircle, Droplet } from 'lucide-react';
+import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ const periodDays = Array.from({ length: 5 }, (_, i) => addDays(periodStart, i));
 const predictedPeriod = Array.from({ length: 5 }, (_, i) => addDays(new Date(today.getFullYear(), today.getMonth() + 1, 3), i));
 const fertileWindow = Array.from({ length: 6 }, (_, i) => addDays(new Date(today.getFullYear(), today.getMonth(), 15), i));
 
-const symptoms = [
+const symptomsList = [
     { id: 'cramps', label: 'Cramps' },
     { id: 'headache', label: 'Headache' },
     { id: 'mood-swings', label: 'Mood Swings' },
@@ -33,9 +33,23 @@ const symptoms = [
     { id: 'acne', label: 'Acne' },
 ];
 
+type LogData = {
+    flow: 'none' | 'light' | 'medium' | 'heavy';
+    symptoms: string[];
+};
+
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(today);
   const [isLogOpen, setIsLogOpen] = useState(false);
+  const [logs, setLogs] = useState<Record<string, LogData>>({
+    [format(new Date(), 'yyyy-MM-dd')]: {
+      flow: 'medium',
+      symptoms: ['cramps', 'fatigue'],
+    },
+  });
+  const [selectedFlow, setSelectedFlow] = useState<'none' | 'light' | 'medium' | 'heavy'>('none');
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+
   const modifiers = {
     period: periodDays,
     predicted: predictedPeriod,
@@ -47,10 +61,35 @@ export default function CalendarPage() {
     fertile: 'fertile',
   };
 
+  const selectedDateKey = date ? format(date, 'yyyy-MM-dd') : '';
+  const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [] };
+
+  const handleOpenLog = () => {
+    setSelectedFlow(currentLog.flow);
+    setSelectedSymptoms(currentLog.symptoms);
+    setIsLogOpen(true);
+  }
+
+  const handleSaveLog = () => {
+    if (selectedDateKey) {
+      setLogs({
+        ...logs,
+        [selectedDateKey]: {
+          flow: selectedFlow,
+          symptoms: selectedSymptoms,
+        },
+      });
+    }
+    setIsLogOpen(false);
+  };
+
   return (
     <div className="flex flex-1 flex-col">
        <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">Cycle Calendar</h1>
+        <h1 className="text-lg font-semibold md:text-2xl font-headline flex items-center gap-2">
+            <CalendarIcon className="w-6 h-6" />
+            Cycle Calendar
+        </h1>
       </header>
        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6 lg:grid lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -93,7 +132,7 @@ export default function CalendarPage() {
                         <span>{format(date || new Date(), 'MMMM d, yyyy')}</span>
                          <Dialog open={isLogOpen} onOpenChange={setIsLogOpen}>
                             <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" onClick={handleOpenLog}>
                                     <PlusCircle className="w-5 h-5" />
                                 </Button>
                             </DialogTrigger>
@@ -104,7 +143,7 @@ export default function CalendarPage() {
                                 <div className="space-y-6 py-4">
                                      <div className="space-y-2">
                                         <Label>Flow Intensity</Label>
-                                        <RadioGroup defaultValue="none" className="flex flex-wrap gap-4">
+                                        <RadioGroup value={selectedFlow} onValueChange={(val) => setSelectedFlow(val as any)} className="flex flex-wrap gap-4">
                                             <div className="flex items-center space-x-2"><RadioGroupItem value="none" id="f-none" /><Label htmlFor="f-none">None</Label></div>
                                             <div className="flex items-center space-x-2"><RadioGroupItem value="light" id="f-light" /><Label htmlFor="f-light">Light</Label></div>
                                             <div className="flex items-center space-x-2"><RadioGroupItem value="medium" id="f-medium" /><Label htmlFor="f-medium">Medium</Label></div>
@@ -114,15 +153,24 @@ export default function CalendarPage() {
                                     <div className="space-y-2">
                                         <Label>Symptoms</Label>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {symptoms.map(symptom => (
+                                            {symptomsList.map(symptom => (
                                                  <div key={symptom.id} className="flex items-center space-x-2">
-                                                    <Checkbox id={symptom.id} />
+                                                    <Checkbox 
+                                                        id={symptom.id}
+                                                        checked={selectedSymptoms.includes(symptom.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            const newSymptoms = checked
+                                                                ? [...selectedSymptoms, symptom.id]
+                                                                : selectedSymptoms.filter((s) => s !== symptom.id);
+                                                            setSelectedSymptoms(newSymptoms);
+                                                        }}
+                                                    />
                                                     <Label htmlFor={symptom.id}>{symptom.label}</Label>
                                                  </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <Button className="w-full" onClick={() => setIsLogOpen(false)}>Save Log</Button>
+                                    <Button className="w-full" onClick={handleSaveLog}>Save Log</Button>
                                 </div>
                             </DialogContent>
                         </Dialog>
@@ -136,7 +184,7 @@ export default function CalendarPage() {
                             </div>
                             <div>
                                 <p className="font-medium">Flow</p>
-                                <p className="text-muted-foreground text-sm">Medium</p>
+                                <p className="text-muted-foreground text-sm capitalize">{currentLog.flow}</p>
                             </div>
                         </div>
                          <div className="flex items-start gap-3">
@@ -145,7 +193,9 @@ export default function CalendarPage() {
                             </div>
                             <div>
                                 <p className="font-medium">Symptoms</p>
-                                <p className="text-muted-foreground text-sm">Cramps, Fatigue</p>
+                                <p className="text-muted-foreground text-sm capitalize">
+                                    {currentLog.symptoms.length > 0 ? currentLog.symptoms.join(', ') : 'None'}
+                                </p>
                             </div>
                         </div>
                     </div>
