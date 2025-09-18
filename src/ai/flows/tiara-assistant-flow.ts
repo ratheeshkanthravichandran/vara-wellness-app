@@ -9,7 +9,6 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/googleai';
 
 const TiaraInputSchema = z.object({
   message: z.string().describe("The user's message or question to Tiara."),
@@ -28,12 +27,9 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
-  tools: [googleAI.googleSearch],
   prompt: `You are Tiara, a compassionate, helpful, and friendly AI assistant integrated into the Vara wellness app.
 
 Your role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
-
-If you need to access real-time information to answer the user's question, use the provided web search tool.
 
 User's message:
 "{{{message}}}"
