@@ -1,3 +1,52 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "user-avatar",
+      "description": "User avatar",
+      "imageUrl": "https://picsum.photos/seed/user-avatar/40/40",
+      "imageHint": "person portrait"
+    },
+    {
+      "id": "yoga",
+      "description": "Woman doing yoga",
+      "imageUrl": "https://picsum.photos/seed/yoga/300/200",
+      "imageHint": "yoga meditation"
+    },
+    {
+      "id": "tea",
+      "description": "A cup of tea",
+      "imageUrl": "https://picsum.photos/seed/tea/300/200",
+      "imageHint": "tea cup"
+    },
+    {
+      "id": "mindful",
+      "description": "Person meditating in nature",
+      "imageUrl": "https://picsum.photos/seed/mindful/300/200",
+      "imageHint": "calm nature"
+    },
+    {
+      "id": "recipe-1",
+      "description": "Healthy salad bowl",
+      "imageUrl": "https://picsum.photos/seed/recipe1/300/200",
+      "imageHint": "healthy salad"
+    },
+    {
+      "id": "recipe-2",
+      "description": "A smoothie",
+      "imageUrl": "https://picsum.photos/seed/recipe2/300/200",
+      "imageHint": "fruit smoothie"
+    },
+    {
+      "id": "recipe-3",
+      "description": "Oatmeal with berries",
+      "imageUrl": "https://picsum.photos/seed/recipe3/300/200",
+      "imageHint": "oatmeal berries"
+    },
+    {
+      "id": "health-monitor-hero",
+      "description": "Woman checking her smartwatch",
+      "imageUrl": "https://picsum.photos/seed/healthhero/1200/400",
+      "imageHint": "smartwatch health"
+    }
+  ]
 }
