@@ -238,16 +238,17 @@ export default function CalendarPage() {
                 onDayClick={handleDayClick}
                 modifiers={modifiers}
                 modifiersClassNames={modifiersClassNames}
-                footer={
-                  selectedRange?.from && (
-                    <div className="px-4 pb-2">
-                       <Button onClick={handleLogPeriod} className="w-full">
-                        <Repeat className="w-4 h-4 mr-2" /> Log Period
-                      </Button>
-                    </div>
-                  )
-                }
               />
+               <div className="w-full p-4 pt-0 space-y-2 text-center">
+                {!selectedRange?.from && (
+                  <p className="text-sm text-muted-foreground">To log your period, please select the start and end dates on the calendar above.</p>
+                )}
+                {selectedRange?.from && (
+                  <Button onClick={handleLogPeriod} className="w-full" size="lg">
+                    <Repeat className="w-4 h-4 mr-2" /> Log Period Dates
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
           <Card className="mt-4">
