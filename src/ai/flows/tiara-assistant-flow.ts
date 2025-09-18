@@ -9,8 +9,15 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { from, of, readableStreamFromAsyncIterator } from 'genkit';
+
+const MessageSchema = z.object({
+  role: z.enum(['user', 'model']),
+  content: z.string(),
+});
 
 const TiaraInputSchema = z.object({
+  history: z.array(MessageSchema).optional(),
   message: z.string().describe("The user's message or question to Tiara."),
 });
 export type TiaraInput = z.infer<typeof TiaraInputSchema>;
@@ -24,14 +31,42 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
+export async function askTiaraStream(
+  input: TiaraInput
+): Promise<ReadableStream<string>> {
+  const { stream } = tiaraAssistantStreamFlow(input);
+
+  const encoder = new TextEncoder();
+  const readableStream = new ReadableStream({
+    async start(controller) {
+      for await (const chunk of stream) {
+        controller.enqueue(encoder.encode(chunk));
+      }
+      controller.close();
+    },
+  });
+
+  return readableStream;
+}
+
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
+  tools: ['googleSearch'],
   prompt: `You are Tiara, a compassionate, helpful, and friendly AI assistant integrated into the Vara wellness app.
 
 Your role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
 
-User's message:
+If you don't know the answer to a question, use the provided Google Search tool to find the most up-to-date and relevant information.
+
+{{#if history}}
+Conversation History:
+{{#each history}}
+- {{role}}: {{content}}
+{{/each}}
+{{/if}}
+
+Current User's message:
 "{{{message}}}"
 
 Your response:
@@ -48,5 +83,17 @@ const tiaraAssistantFlow = ai.defineFlow(
     const result = await prompt(input);
     const response = result.text;
     return { response };
+  }
+);
+
+const tiaraAssistantStreamFlow = ai.defineFlow(
+  {
+    name: 'tiaraAssistantStreamFlow',
+    inputSchema: TiaraInputSchema,
+    stream: true,
+  },
+  async (input) => {
+    const { stream } = await prompt(input);
+    return from(stream).pipe(chunk => chunk.text);
   }
 );

@@ -1,92 +1,97 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { askTiara } from '@/ai/flows/tiara-assistant-flow';
+import { askTiaraStream } from '@/ai/flows/tiara-assistant-flow';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from '@/components/ui/form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageCircle, Send, Sparkles } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-const formSchema = z.object({
-  message: z.string().min(1, 'Message cannot be empty.'),
-});
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 type Message = {
-  id: string;
-  sender: 'user' | 'tiara';
-  text: string;
-  isThinking?: boolean;
+  role: 'user' | 'model';
+  content: string;
 };
 
 export default function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [conversation, setConversation] = useState<Message[]>([]);
+  const [currentMessage, setCurrentMessage] = useState('');
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      message: '',
-    },
-  });
-
-  useEffect(() => {
+  const scrollToBottom = () => {
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector(
         '[data-radix-scroll-area-viewport]',
       );
       if (viewport) {
-        viewport.scrollTop = viewport.scrollHeight;
+        setTimeout(() => {
+          viewport.scrollTop = viewport.scrollHeight;
+        }, 100);
       }
     }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [conversation]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!currentMessage.trim() || loading) return;
+
     setLoading(true);
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      sender: 'user',
-      text: values.message,
-    };
+    const userMessage: Message = { role: 'user', content: currentMessage };
+    const newConversation = [...conversation, userMessage];
+    setConversation(newConversation);
+    setCurrentMessage('');
 
-    const tiaraThinkingMessage: Message = {
-      id: `tiara-${Date.now()}`,
-      sender: 'tiara',
-      text: 'Tiara is thinking...',
-      isThinking: true,
+    let accumulatedResponse = '';
+    const tiaraMessage: Message = {
+      role: 'model',
+      content: 'Tiara is thinking...',
     };
-
-    setConversation((prev) => [...prev, userMessage, tiaraThinkingMessage]);
-    form.reset();
+    setConversation((prev) => [...prev, tiaraMessage]);
 
     try {
-      const result = await askTiara(values);
+      const stream = await askTiaraStream({
+        history: newConversation.slice(0, -1),
+        message: userMessage.content,
+      });
 
-      const tiaraResponseMessage: Message = {
-        id: tiaraThinkingMessage.id, // Use the same ID to replace the thinking message
-        sender: 'tiara',
-        text: result.response,
-      };
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
 
       setConversation((prev) =>
-        prev.map((msg) =>
-          msg.id === tiaraThinkingMessage.id ? tiaraResponseMessage : msg,
+        prev.map((msg, index) =>
+          index === prev.length - 1 ? { ...msg, content: '' } : msg,
         ),
       );
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          accumulatedResponse += decoder.decode(value, { stream: true });
+          setConversation((prev) =>
+            prev.map((msg, index) =>
+              index === prev.length - 1
+                ? { ...msg, content: accumulatedResponse }
+                : msg,
+            ),
+          );
+          scrollToBottom();
+        }
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -94,8 +99,7 @@ export default function AssistantPage() {
         description:
           error instanceof Error ? error.message : 'Please try again.',
       });
-      // Remove the thinking message and the user's message on error
-      setConversation((prev) => prev.slice(0, -2));
+      setConversation((prev) => prev.slice(0, -1)); // Remove the thinking message
     } finally {
       setLoading(false);
     }
@@ -126,14 +130,14 @@ export default function AssistantPage() {
                     <p>Ask anything, or start a discussion on any topic.</p>
                   </div>
                 )}
-                {conversation.map((msg) => (
+                {conversation.map((msg, index) => (
                   <div
-                    key={msg.id}
+                    key={index}
                     className={`flex items-start gap-3 ${
-                      msg.sender === 'user' ? 'justify-end' : ''
+                      msg.role === 'user' ? 'justify-end' : ''
                     }`}
                   >
-                    {msg.sender === 'tiara' && (
+                    {msg.role === 'model' && (
                       <Avatar className="w-8 h-8">
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           T
@@ -142,22 +146,22 @@ export default function AssistantPage() {
                     )}
                     <div
                       className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                        msg.sender === 'user'
+                        msg.role === 'user'
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
                       }`}
                     >
-                      {msg.isThinking ? (
+                      {msg.content === 'Tiara is thinking...' ? (
                         <p className="text-sm text-muted-foreground animate-pulse">
-                          {msg.text}
+                          {msg.content}
                         </p>
                       ) : (
                         <p className="text-sm whitespace-pre-wrap">
-                          {msg.text}
+                          {msg.content}
                         </p>
                       )}
                     </div>
-                    {msg.sender === 'user' && (
+                    {msg.role === 'user' && (
                       <Avatar className="w-8 h-8">
                         <AvatarFallback>You</AvatarFallback>
                       </Avatar>
@@ -167,39 +171,25 @@ export default function AssistantPage() {
               </div>
             </ScrollArea>
             <div className="mt-auto pt-4 border-t">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="flex items-start gap-2"
-                >
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <Textarea
-                            placeholder="Ask Tiara anything..."
-                            className="min-h-[40px] resize-none"
-                            rows={1}
-                            {...field}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                form.handleSubmit(onSubmit)();
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={loading} size="icon">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
-              </Form>
+              <form onSubmit={handleSubmit} className="flex items-start gap-2">
+                <Textarea
+                  placeholder="Ask Tiara anything..."
+                  className="min-h-[40px] resize-none"
+                  rows={1}
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e as any);
+                    }
+                  }}
+                  disabled={loading}
+                />
+                <Button type="submit" disabled={loading} size="icon">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </form>
             </div>
           </CardContent>
         </Card>
