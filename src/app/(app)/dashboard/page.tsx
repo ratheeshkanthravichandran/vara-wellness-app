@@ -30,20 +30,22 @@ function getCyclePhase(day: number) {
 }
 
 function getEnergyLabel(level: number | undefined){
-    if (!level || level <= 3) return 'Low';
+    if (!level || level === 0) return 'Not Logged';
+    if (level <= 3) return 'Low';
     if (level <= 7) return 'Medium';
     return 'High';
 }
 
 function getMoodLabel(level: number | undefined){
-    if (!level || level <= 2) return 'Sensitive';
+    if (!level || level === 0) return 'Not Logged';
+    if (level <= 2) return 'Sensitive';
     if (level <= 4) return 'Stable';
     return 'Happy';
 }
 
 export default function DashboardPage() {
   const [log, setLog] = useState<LogData | null>(null);
-  const [cycleDay, setCycleDay] = useState(1);
+  const [cycleDay, setCycleDay] = useState(0);
   const [cyclePhase, setCyclePhase] = useState('');
 
   useEffect(() => {
@@ -58,9 +60,9 @@ export default function DashboardPage() {
 
   }, []);
 
-  const energyLabel = getEnergyLabel(log?.energy);
-  const moodLabel = getMoodLabel(log?.mood);
-  const symptoms = log?.symptoms && log.symptoms.length > 0 ? log.symptoms.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') : "None logged";
+  const energyValue = log?.energy ? `${getEnergyLabel(log.energy)} (${log.energy}/10)`: "Not Logged";
+  const moodValue = log?.mood ? `${getMoodLabel(log.mood)} (${log.mood}/5)` : "Not Logged";
+  const symptoms = log?.symptoms && log.symptoms.length > 0 ? log.symptoms.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') : "None";
 
 
   return (
@@ -94,7 +96,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{log?.energy ? `${energyLabel} (${log.energy}/10)`: "Not Logged"}</div>
+              <div className="text-2xl font-bold">{energyValue}</div>
               <p className="text-xs text-muted-foreground">
                 Listen to your body
               </p>
@@ -108,7 +110,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{log?.mood ? `${moodLabel} (${log.mood}/5)` : "Not Logged"}</div>
+              <div className="text-2xl font-bold">{moodValue}</div>
               <p className="text-xs text-muted-foreground">
                 Be kind to yourself
               </p>
@@ -122,9 +124,9 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-l font-bold capitalize">{symptoms}</div>
+              <div className="text-lg font-bold capitalize">{symptoms}</div>
               <p className="text-xs text-muted-foreground mt-2">
-                Based on your logs
+                {symptoms === 'None' ? 'No symptoms logged today' : 'Based on your logs'}
               </p>
             </CardContent>
           </Card>
