@@ -9,7 +9,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'zod';
 
 const MessageSchema = z.object({
@@ -32,23 +31,28 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
-export function askTiaraStream(
+export async function askTiaraStream(
   input: TiaraInput
-): ReadableStream<string> {
+): Promise<ReadableStream<string>> {
   const { stream } = tiaraAssistantStreamFlow(input);
-  return stream.pipe(chunk => chunk.text);
+  return stream.pipeThrough(
+    new TransformStream({
+      transform: (chunk, controller) => {
+        controller.enqueue(chunk.text);
+      },
+    })
+  );
 }
 
 
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
-  tools: [googleAI.googleSearch],
   prompt: `You are Tiara, a compassionate, helpful, and friendly AI assistant integrated into the Vara wellness app.
 
 Your primary role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
 
-Your knowledge is based on information up to your last update, but you have access to real-time information from the internet through a search tool. You should use this tool whenever a user asks a question that you cannot answer from your internal knowledge, especially for recent events or specific people.
+You have access to real-time information from the internet through a search tool. You should use this tool whenever a user asks a question that you cannot answer from your internal knowledge, especially for recent events or specific people.
 
 When using the search tool, you do not need to mention that you are searching. Simply provide the answer to the user as if you knew it.
 
