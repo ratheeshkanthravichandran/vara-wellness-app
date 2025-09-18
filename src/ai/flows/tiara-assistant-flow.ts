@@ -31,9 +31,9 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
-export async function askTiaraStream(
+export function askTiaraStream(
   input: TiaraInput
-): Promise<ReadableStream<string>> {
+): ReadableStream<string> {
   const { stream } = tiaraAssistantStreamFlow(input);
   return stream.pipeThrough(
     new TransformStream({
@@ -89,7 +89,6 @@ const tiaraAssistantStreamFlow = ai.defineFlow(
     stream: true,
   },
   async (input) => {
-    const { stream } = await prompt(input);
-    return stream;
+    return await prompt(input);
   }
 );
