@@ -149,11 +149,8 @@ export default function CalendarPage() {
   const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
   const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
   
-  const handleDayClick = (day: Date, { selected }: { selected?: boolean }) => {
+  const handleDayClick = (day: Date) => {
     setSelectedDate(day);
-    if (!selected) {
-        setSelectedRange(undefined); // Clear range if a single day is clicked
-    }
   };
 
   const handleOpenLog = (date: Date) => {
@@ -394,4 +391,6 @@ export default function CalendarPage() {
     </div>
   );
 }
+    
+
     

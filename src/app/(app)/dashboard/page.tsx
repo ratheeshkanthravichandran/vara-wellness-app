@@ -65,7 +65,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const logs = getLogs();
     const todayKey = format(new Date(), 'yyyy-MM-dd');
-    const todayLog = logs[todayKey];
+    const todayLog = logs[todayKey] || null;
     setLog(todayLog);
 
     const cData = getCycleData();
@@ -147,10 +147,11 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-        {log && cyclePhase && <TodaySuggestions log={log} cyclePhase={cyclePhase} />}
+        <TodaySuggestions log={log} cyclePhase={cyclePhase} />
       </main>
     </div>
   );
 }
 
+    
     

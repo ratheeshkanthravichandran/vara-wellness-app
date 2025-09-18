@@ -18,8 +18,8 @@ function getEnergyLabel(level: number | undefined){
     return 'high';
 }
 
-export function TodaySuggestions({log, cyclePhase}: {log: LogData, cyclePhase: string}) {
-  const [loading, setLoading] = useState(true);
+export function TodaySuggestions({log, cyclePhase}: {log: LogData | null, cyclePhase: string | null}) {
+  const [loading, setLoading] = useState(false);
   const [result, setResult] =
     useState<TailoredActivityRecommendationsOutput | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +46,32 @@ export function TodaySuggestions({log, cyclePhase}: {log: LogData, cyclePhase: s
     }
     getSuggestions();
   }, [log, cyclePhase]);
+
+  if (!log) {
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold tracking-tight font-headline">
+                Today's Suggestions
+                </h2>
+                <Link href="/suggestions">
+                <Button variant="outline">View More</Button>
+                </Link>
+            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="text-primary" />
+                        <span>Personalized Activity Ideas</span>
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">Log your symptoms, mood, and energy levels in the calendar to get personalized suggestions for today!</p>
+                </CardContent>
+            </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -91,4 +117,5 @@ export function TodaySuggestions({log, cyclePhase}: {log: LogData, cyclePhase: s
   );
 }
 
+    
     
