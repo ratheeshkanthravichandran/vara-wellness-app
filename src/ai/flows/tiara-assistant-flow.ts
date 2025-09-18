@@ -77,7 +77,6 @@ const tiaraAssistantStreamFlow = ai.defineFlow(
   {
     name: 'tiaraAssistantStreamFlow',
     inputSchema: TiaraInputSchema,
-    outputSchema: z.any(),
     stream: true,
   },
   async (input) => {
