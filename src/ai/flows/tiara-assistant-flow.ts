@@ -34,7 +34,6 @@ export async function askTiaraStream(input: TiaraInput) {
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
-  output: { schema: TiaraOutputSchema },
   prompt: `You are Tiara, a compassionate, helpful, and friendly AI assistant integrated into the Vara wellness app.
 
 Your role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
@@ -56,8 +55,8 @@ const tiaraAssistantFlow = ai.defineFlow(
     outputSchema: TiaraOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    return output!;
+    const result = await prompt(input);
+    return { response: result.text! };
   }
 );
 

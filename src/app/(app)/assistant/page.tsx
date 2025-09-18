@@ -74,7 +74,9 @@ export default function AssistantPage() {
       let fullResponse = '';
 
       for await (const chunk of stream) {
-        fullResponse = chunk.response;
+        if (chunk.content) {
+            fullResponse = chunk.content.map((c: any) => c.text || '').join('');
+        }
         setConversation((prev) =>
           prev.map((msg) =>
             msg.id === tiaraMessageId ? { ...msg, text: fullResponse } : msg
