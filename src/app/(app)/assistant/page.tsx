@@ -1,11 +1,17 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { askTiara } from '@/ai/flows/tiara-assistant-flow';
+import { askTiaraStream } from '@/ai/flows/tiara-assistant-flow';
 import { useToast } from '@/hooks/use-toast';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +25,7 @@ const formSchema = z.object({
 });
 
 type Message = {
+  id: string;
   sender: 'user' | 'tiara';
   text: string;
 };
@@ -27,6 +34,7 @@ export default function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const [conversation, setConversation] = useState<Message[]>([]);
   const { toast } = useToast();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -35,24 +43,53 @@ export default function AssistantPage() {
     },
   });
 
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        // Find the viewport element within the ScrollArea
+        const viewport = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+        if (viewport) {
+            viewport.scrollTop = viewport.scrollHeight;
+        }
+    }
+  }, [conversation]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
-    const userMessage: Message = { sender: 'user', text: values.message };
-    setConversation((prev) => [...prev, userMessage]);
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: values.message,
+    };
+    const tiaraMessageId = `tiara-${Date.now()}`;
+    const initialTiaraMessage: Message = {
+      id: tiaraMessageId,
+      sender: 'tiara',
+      text: '',
+    };
+    setConversation((prev) => [...prev, userMessage, initialTiaraMessage]);
     form.reset();
 
     try {
-      const res = await askTiara(values);
-      const tiaraMessage: Message = { sender: 'tiara', text: res.response };
-      setConversation((prev) => [...prev, tiaraMessage]);
+      const stream = await askTiaraStream(values);
+      let fullResponse = '';
+
+      for await (const chunk of stream) {
+        fullResponse = chunk.response;
+        setConversation((prev) =>
+          prev.map((msg) =>
+            msg.id === tiaraMessageId ? { ...msg, text: fullResponse } : msg
+          )
+        );
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'An error occurred.',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        description:
+          error instanceof Error ? error.message : 'Please try again.',
       });
-      // Remove the user's message if the API call fails
-      setConversation((prev) => prev.slice(0, -1));
+      // Remove both user's and tiara's placeholder message on error
+      setConversation((prev) => prev.slice(0, -2));
     } finally {
       setLoading(false);
     }
@@ -70,10 +107,12 @@ export default function AssistantPage() {
       <main className="flex-1 flex flex-col p-4 md:p-6">
         <Card className="flex flex-1 flex-col w-full max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle className="font-headline text-2xl text-center">Your Personal AI Assistant</CardTitle>
+            <CardTitle className="font-headline text-2xl text-center">
+              Your Personal AI Assistant
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col gap-4">
-            <ScrollArea className="flex-1 space-y-4 pr-4">
+            <ScrollArea className="flex-1 space-y-4 pr-4" ref={scrollAreaRef}>
               <div className="space-y-4">
                 {conversation.length === 0 && (
                   <div className="text-center text-muted-foreground p-8">
@@ -81,14 +120,18 @@ export default function AssistantPage() {
                     <p>Ask anything, or start a discussion on any topic.</p>
                   </div>
                 )}
-                {conversation.map((msg, index) => (
+                {conversation.map((msg) => (
                   <div
-                    key={index}
-                    className={`flex items-start gap-3 ${msg.sender === 'user' ? 'justify-end' : ''}`}
+                    key={msg.id}
+                    className={`flex items-start gap-3 ${
+                      msg.sender === 'user' ? 'justify-end' : ''
+                    }`}
                   >
                     {msg.sender === 'tiara' && (
                       <Avatar className="w-8 h-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground">T</AvatarFallback>
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          T
+                        </AvatarFallback>
                       </Avatar>
                     )}
                     <div
@@ -98,25 +141,19 @@ export default function AssistantPage() {
                           : 'bg-muted'
                       }`}
                     >
-                      <p className="text-sm">{msg.text}</p>
+                      {msg.text ? (
+                         <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground animate-pulse">Tiara is thinking...</p>
+                      )}
                     </div>
-                     {msg.sender === 'user' && (
+                    {msg.sender === 'user' && (
                       <Avatar className="w-8 h-8">
                         <AvatarFallback>You</AvatarFallback>
                       </Avatar>
                     )}
                   </div>
                 ))}
-                 {loading && (
-                    <div className="flex items-start gap-3">
-                        <Avatar className="w-8 h-8">
-                            <AvatarFallback className="bg-primary text-primary-foreground animate-pulse">T</AvatarFallback>
-                        </Avatar>
-                        <div className="rounded-lg px-4 py-2 bg-muted">
-                            <p className="text-sm text-muted-foreground animate-pulse">Tiara is thinking...</p>
-                        </div>
-                    </div>
-                )}
               </div>
             </ScrollArea>
             <div className="mt-auto pt-4 border-t">
@@ -137,10 +174,10 @@ export default function AssistantPage() {
                             rows={1}
                             {...field}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    form.handleSubmit(onSubmit)();
-                                }
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                form.handleSubmit(onSubmit)();
+                              }
                             }}
                           />
                         </FormControl>

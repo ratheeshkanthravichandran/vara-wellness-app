@@ -3,12 +3,14 @@
  * @fileOverview Defines a Genkit flow for a general-purpose AI assistant named Tiara.
  *
  * - `askTiara` - The exported function to trigger the flow.
+ * - `askTiaraStream` - The exported function to trigger the streaming flow.
  * - `TiaraInput` - The input type for the flow.
  * - `TiaraOutput` - The output type for the flow.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { googleAI } from '@genkit-ai/googleai';
 
 const TiaraInputSchema = z.object({
   message: z.string().describe('The user\'s message or question to Tiara.'),
@@ -24,6 +26,11 @@ export async function askTiara(input: TiaraInput): Promise<TiaraOutput> {
   return tiaraAssistantFlow(input);
 }
 
+export async function askTiaraStream(input: TiaraInput) {
+  const { stream } = tiaraAssistantStreamFlow(input);
+  return stream;
+}
+
 const prompt = ai.definePrompt({
   name: 'tiaraAssistantPrompt',
   input: { schema: TiaraInputSchema },
@@ -32,11 +39,14 @@ const prompt = ai.definePrompt({
 
 Your role is to engage in open conversation with the user on any topic they wish to discuss. Provide supportive, informative, and thoughtful responses.
 
+If you need to access real-time information, use the provided web search tool.
+
 User's message:
 "{{{message}}}"
 
 Your response:
 `,
+  tools: [googleAI.search()],
 });
 
 const tiaraAssistantFlow = ai.defineFlow(
@@ -48,5 +58,17 @@ const tiaraAssistantFlow = ai.defineFlow(
   async (input) => {
     const { output } = await prompt(input);
     return output!;
+  }
+);
+
+const tiaraAssistantStreamFlow = ai.defineFlow(
+  {
+    name: 'tiaraAssistantStreamFlow',
+    inputSchema: TiaraInputSchema,
+    outputSchema: z.any(),
+    stream: true,
+  },
+  async (input) => {
+    return await prompt.stream(input);
   }
 );
