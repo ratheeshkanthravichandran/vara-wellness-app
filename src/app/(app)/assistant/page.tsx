@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { askTiaraStream } from '@/ai/flows/tiara-assistant-flow';
+import { askTiara } from '@/ai/flows/tiara-assistant-flow';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -47,42 +47,32 @@ export default function AssistantPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!currentMessage.trim() || loading) return;
-  
+
     setLoading(true);
     const userMessage: Message = { role: 'user', content: currentMessage };
     const newConversation = [...conversation, userMessage];
     setConversation(newConversation);
     setCurrentMessage('');
-  
+
     // Add a placeholder for the model's response
     setConversation((prev) => [
       ...prev,
       { role: 'model', content: '' },
     ]);
-  
+
     try {
-      const stream = await askTiaraStream({
+      const result = await askTiara({
         history: newConversation.slice(0, -1),
         message: userMessage.content,
       });
-  
-      const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
-  
-      let accumulatedResponse = '';
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-  
-        accumulatedResponse += value;
-        setConversation((prev) =>
-          prev.map((msg, index) =>
-            index === prev.length - 1
-              ? { ...msg, content: accumulatedResponse }
-              : msg,
-          ),
-        );
-        scrollToBottom();
-      }
+
+      setConversation((prev) =>
+        prev.map((msg, index) =>
+          index === prev.length - 1
+            ? { ...msg, content: result.response }
+            : msg,
+        ),
+      );
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -94,6 +84,7 @@ export default function AssistantPage() {
       setConversation((prev) => prev.slice(0, -1));
     } finally {
       setLoading(false);
+      scrollToBottom();
     }
   }
 
