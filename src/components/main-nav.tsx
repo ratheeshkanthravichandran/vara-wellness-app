@@ -15,6 +15,7 @@ import {
   Leaf,
   Sparkles,
   BrainCircuit,
+  MessageCircle,
 } from 'lucide-react';
 
 const menuItems = [
@@ -24,6 +25,7 @@ const menuItems = [
   { href: '/wellness', label: 'Wellness', icon: BrainCircuit },
   { href: '/diet', label: 'Diet', icon: Leaf },
   { href: '/suggestions', label: 'Suggestions', icon: Sparkles },
+  { href: '/assistant', label: 'Ask Tiara', icon: MessageCircle },
 ];
 
 export function MainNav() {

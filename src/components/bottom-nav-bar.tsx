@@ -7,7 +7,7 @@ import {
   CalendarDays,
   HeartPulse,
   Leaf,
-  BrainCircuit,
+  MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +15,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/health-monitor', label: 'Monitor', icon: HeartPulse },
-  { href: '/wellness', label: 'Wellness', icon: BrainCircuit },
+  { href: '/assistant', label: 'Ask Tiara', icon: MessageCircle },
   { href: '/diet', label: 'Diet', icon: Leaf },
 ];
 
