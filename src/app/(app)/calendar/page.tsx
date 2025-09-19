@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { addDays, format, eachDayOfInterval, differenceInDays, startOfDay } from 'date-fns';
+import { addDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap, Repeat } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,22 +25,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useCycleStore, type LogData } from '@/store/cycle-data-store';
 
-// --- Data Types ---
-export type LogData = {
-    flow: 'none' | 'light' | 'medium' | 'heavy';
-    symptoms: string[];
-    mood: number; // Scale 1-5
-    energy: number; // Scale 1-10
-};
-
-export type CycleData = {
-    periods: { from: string; to: string }[];
-    cycleLength: number;
-    periodLength: number;
-};
-
-// --- Constants ---
 const SYMPTOMS_LIST = [
     { id: 'cramps', label: 'Cramps' },
     { id: 'headache', label: 'Headache' },
@@ -49,84 +35,23 @@ const SYMPTOMS_LIST = [
     { id: 'bloating', label: 'Bloating' },
     { id: 'acne', label: 'Acne' },
 ];
-const DEFAULT_CYCLE_LENGTH = 28;
-const DEFAULT_PERIOD_LENGTH = 5;
 
-// --- Data Management Functions ---
-export function getLogs(): Record<string, LogData> {
-  if (typeof window === 'undefined') return {};
-  const savedLogs = window.localStorage.getItem('vara-cycle-logs');
-  return savedLogs ? JSON.parse(savedLogs) : {};
-}
-
-export function saveLogs(logs: Record<string, LogData>) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem('vara-cycle-logs', JSON.stringify(logs));
-}
-
-export function getCycleData(): CycleData {
-    if (typeof window === 'undefined') {
-        const today = new Date();
-        const defaultStart = addDays(today, -10);
-        const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
-        return {
-            periods: [{ from: format(defaultStart, 'yyyy-MM-dd'), to: format(defaultEnd, 'yyyy-MM-dd') }],
-            cycleLength: DEFAULT_CYCLE_LENGTH,
-            periodLength: DEFAULT_PERIOD_LENGTH,
-        };
-    }
-
-    const savedData = window.localStorage.getItem('vara-cycle-data');
-    if (savedData) {
-        try {
-            const parsedData = JSON.parse(savedData);
-            // Basic validation
-            if (parsedData.periods && parsedData.cycleLength && parsedData.periodLength) {
-                 return parsedData;
-            }
-        } catch (e) {
-            console.error("Failed to parse cycle data from localStorage", e);
-        }
-    }
-    // Create default data if none exists or if data is corrupt
-    const today = new Date();
-    const defaultStart = addDays(today, -10);
-    const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
-    const defaultCycleData: CycleData = {
-        periods: [{ from: format(defaultStart, 'yyyy-MM-dd'), to: format(defaultEnd, 'yyyy-MM-dd') }],
-        cycleLength: DEFAULT_CYCLE_LENGTH,
-        periodLength: DEFAULT_PERIOD_LENGTH,
-    };
-    window.localStorage.setItem('vara-cycle-data', JSON.stringify(defaultCycleData));
-    return defaultCycleData;
-}
-
-export function saveCycleData(data: CycleData) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem('vara-cycle-data', JSON.stringify(data));
-}
-
-
-// --- Main Component ---
 export default function CalendarPage() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const { logs, cycleData, isInitialized, initialize, saveLog, logPeriod } = useCycleStore();
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
   const [isLogOpen, setIsLogOpen] = useState(false);
-  
-  const [logs, setLogs] = useState<Record<string, LogData> | null>(null);
-  const [cycleData, setCycleData] = useState<CycleData | null>(null);
-  
+
+  // Form state for the dialog
   const [selectedFlow, setSelectedFlow] = useState<'none' | 'light' | 'medium' | 'heavy'>('none');
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [selectedMood, setSelectedMood] = useState<number>(0);
   const [selectedEnergy, setSelectedEnergy] = useState<number>(0);
   
-  // Load data from localStorage on component mount on client side
   useEffect(() => {
-    setSelectedDate(new Date());
-    setLogs(getLogs());
-    setCycleData(getCycleData());
-  }, []);
+    initialize();
+  }, [initialize]);
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -134,7 +59,6 @@ export default function CalendarPage() {
 
   const handleOpenLog = (date: Date) => {
     setSelectedDate(date);
-    if (!logs) return;
     const logKey = format(date, 'yyyy-MM-dd');
     const log = logs[logKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
     setSelectedFlow(log.flow);
@@ -144,62 +68,25 @@ export default function CalendarPage() {
     setIsLogOpen(true);
   };
   
-  const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
-
   const handleSaveLog = () => {
-    if (selectedDateKey) {
-      const updatedLogs = {
-        ...(logs || {}),
-        [selectedDateKey]: {
-          flow: selectedFlow,
-          symptoms: selectedSymptoms,
-          mood: selectedMood,
-          energy: selectedEnergy,
-        },
-      };
-      setLogs(updatedLogs);
-      saveLogs(updatedLogs);
+    if (selectedDate) {
+      saveLog(selectedDate, {
+        flow: selectedFlow,
+        symptoms: selectedSymptoms,
+        mood: selectedMood,
+        energy: selectedEnergy,
+      });
     }
     setIsLogOpen(false);
   };
 
   const handleLogPeriod = () => {
-    if (selectedRange?.from && selectedRange?.to && cycleData) {
-        const newPeriod = {
-            from: format(startOfDay(selectedRange.from), 'yyyy-MM-dd'),
-            to: format(startOfDay(selectedRange.to), 'yyyy-MM-dd'),
-        };
-
-        // Basic logic to update cycle and period length based on last two cycles
-        let newCycleLength = cycleData.cycleLength;
-        let newPeriodLength = cycleData.periodLength;
-
-        if (cycleData.periods.length > 0) {
-            const lastPeriod = cycleData.periods[cycleData.periods.length - 1];
-            const lastCycleLength = differenceInDays(new Date(newPeriod.from), new Date(lastPeriod.from));
-            if (lastCycleLength > 10 && lastCycleLength < 60) {
-                newCycleLength = Math.round((cycleData.cycleLength + lastCycleLength) / 2);
-            }
-        }
-        
-        const currentPeriodLength = differenceInDays(new Date(newPeriod.to), new Date(newPeriod.from)) + 1;
-        if(currentPeriodLength > 0 && currentPeriodLength < 15) {
-            newPeriodLength = Math.round((cycleData.periodLength + currentPeriodLength) / 2);
-        }
-
-        const updatedCycleData: CycleData = {
-            periods: [...cycleData.periods, newPeriod].sort((a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()),
-            cycleLength: newCycleLength,
-            periodLength: newPeriodLength,
-        };
-        
-        setCycleData(updatedCycleData);
-        saveCycleData(updatedCycleData);
+    if (selectedRange?.from && selectedRange?.to) {
+        logPeriod(selectedRange.from, selectedRange.to);
         setSelectedRange(undefined);
     }
   };
 
-  // --- Modifiers for Calendar Highlighting ---
   const periodDays = cycleData?.periods.flatMap(p => 
     eachDayOfInterval({ start: new Date(p.from), end: new Date(p.to) })
   ) || [];
@@ -208,10 +95,10 @@ export default function CalendarPage() {
     ? new Date(cycleData.periods[cycleData.periods.length - 1].from)
     : new Date();
 
-  const predictedPeriodStart = addDays(lastPeriodStart, cycleData?.cycleLength || DEFAULT_CYCLE_LENGTH);
+  const predictedPeriodStart = addDays(lastPeriodStart, cycleData?.cycleLength || 28);
   const predictedPeriod = eachDayOfInterval({
       start: predictedPeriodStart,
-      end: addDays(predictedPeriodStart, (cycleData?.periodLength || DEFAULT_PERIOD_LENGTH) - 1),
+      end: addDays(predictedPeriodStart, (cycleData?.periodLength || 5) - 1),
   });
 
   const ovulationDay = addDays(predictedPeriodStart, -14);
@@ -224,15 +111,17 @@ export default function CalendarPage() {
     period: periodDays,
     predicted: predictedPeriod,
     fertile: fertileWindow,
+    selected: selectedDate,
   };
 
   const modifiersClassNames = {
     period: 'period',
     predicted: 'predicted',
     fertile: 'fertile',
+    selected: 'bg-accent/50 rounded-full',
   };
-
-  if (!logs || !cycleData) {
+  
+  if (!isInitialized) {
     return (
         <div className="flex flex-1 flex-col items-center justify-center">
             <p>Loading your calendar...</p>
@@ -240,6 +129,7 @@ export default function CalendarPage() {
     );
   }
 
+  const selectedDateKey = selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '';
   const currentLog = logs[selectedDateKey] || { flow: 'none', symptoms: [], mood: 0, energy: 0 };
   
   return (

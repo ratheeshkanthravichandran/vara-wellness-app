@@ -24,8 +24,8 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { getLogs, type LogData } from '@/app/(app)/calendar/page';
-import { format, startOfWeek, eachDayOfInterval, parseISO, subDays } from 'date-fns';
+import { useCycleStore, type LogData } from '@/store/cycle-data-store';
+import { format, eachDayOfInterval, subDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -42,13 +42,18 @@ const chartConfig = {
 };
 
 export default function HealthMonitorPage() {
+  const { logs, isInitialized, initialize } = useCycleStore();
   const [moodData, setMoodData] = useState<any[]>([]);
   const [energyData, setEnergyData] = useState<any[]>([]);
+  
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   useEffect(() => {
-    const logs = getLogs();
+    if (!isInitialized) return;
+
     const today = new Date();
-    // Get the last 7 days including today
     const weekDays = eachDayOfInterval({
       start: subDays(today, 6),
       end: today,
@@ -58,7 +63,7 @@ export default function HealthMonitorPage() {
       const dayKey = format(day, 'yyyy-MM-dd');
       const log: LogData | undefined = logs[dayKey];
       return {
-        date: format(day, 'EEE'), // Mon, Tue, etc.
+        date: format(day, 'EEE'),
         mood: log ? log.mood : null,
       };
     });
@@ -74,7 +79,15 @@ export default function HealthMonitorPage() {
 
     setMoodData(formattedMoodData);
     setEnergyData(formattedEnergyData);
-  }, []);
+  }, [logs, isInitialized]);
+
+  if (!isInitialized) {
+      return (
+          <div className="flex flex-1 flex-col items-center justify-center">
+              <p>Loading your health monitor...</p>
+          </div>
+      );
+  }
 
   return (
     <div className="flex flex-1 flex-col">

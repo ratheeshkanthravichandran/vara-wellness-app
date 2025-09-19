@@ -10,7 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { LogData } from '@/app/(app)/calendar/page';
+import type { LogData } from '@/store/cycle-data-store';
 
 function getEnergyLabel(level: number | undefined){
     if (!level || level <= 3) return 'low';
@@ -26,7 +26,10 @@ export function TodaySuggestions({log, cyclePhase}: {log: LogData | null, cycleP
 
   useEffect(() => {
     async function getSuggestions() {
-      if (!log || !cyclePhase) return;
+      if (!log || !cyclePhase) {
+        setResult(null);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
@@ -116,6 +119,3 @@ export function TodaySuggestions({log, cyclePhase}: {log: LogData | null, cycleP
     </div>
   );
 }
-
-    
-    

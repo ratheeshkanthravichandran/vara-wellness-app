@@ -9,27 +9,24 @@ import {
 } from '@/components/ui/card';
 import { Droplet, Zap, Heart, Brain, CalendarPlus } from 'lucide-react';
 import { TodaySuggestions } from './components/today-suggestions';
-import { getLogs, getCycleData, type CycleData, type LogData } from '@/app/(app)/calendar/page';
+import { useCycleStore } from '@/store/cycle-data-store';
 import { useState, useEffect } from 'react';
-import { format, differenceInDays, addDays } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
 
-function getCycleDay(cycleData: CycleData | null): number {
+function getCycleDay(cycleData: ReturnType<typeof useCycleStore>['cycleData']): number {
     if (!cycleData || cycleData.periods.length === 0) {
       return 1;
     }
     const lastPeriodStart = new Date(cycleData.periods[cycleData.periods.length - 1].from);
-    // Ensure we are comparing date objects without time component
     const today = new Date();
     today.setHours(0, 0, 0, 0);
   
     const diffDays = differenceInDays(today, lastPeriodStart);
   
-    // If diffDays is negative, it means the last period is in the future.
-    // This can happen with default data. We'll just show day 1.
     if (diffDays < 0) {
         return 1;
     }
@@ -61,24 +58,25 @@ function getMoodLabel(level: number | undefined){
 }
 
 export default function DashboardPage() {
-  const [log, setLog] = useState<LogData | null>(null);
-  const [cycleData, setCycleData] = useState<CycleData | null>(null);
-  const [cycleDay, setCycleDay] = useState(0);
-  const [cyclePhase, setCyclePhase] = useState('');
-
+  const { logs, cycleData, isInitialized, initialize } = useCycleStore();
+  
   useEffect(() => {
-    const logs = getLogs();
-    const todayKey = format(new Date(), 'yyyy-MM-dd');
-    const todayLog = logs[todayKey] || null;
-    setLog(todayLog);
+      initialize();
+  }, [initialize]);
 
-    const cData = getCycleData();
-    setCycleData(cData);
-    const day = getCycleDay(cData);
-    setCycleDay(day);
-    setCyclePhase(getCyclePhase(day, cData.periodLength));
+  if (!isInitialized) {
+      return (
+          <div className="flex flex-1 flex-col items-center justify-center">
+              <p>Loading your dashboard...</p>
+          </div>
+      );
+  }
 
-  }, []);
+  const todayKey = format(new Date(), 'yyyy-MM-dd');
+  const log = logs[todayKey] || null;
+
+  const cycleDay = getCycleDay(cycleData);
+  const cyclePhase = getCyclePhase(cycleDay, cycleData.periodLength);
 
   const energyValue = log?.energy ? `${getEnergyLabel(log.energy)} (${log.energy}/10)`: "Not Logged";
   const moodValue = log?.mood ? `${getMoodLabel(log.mood)} (${log.mood}/5)` : "Not Logged";
