@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Logo } from '@/components/logo';
+import { AuthLogo } from '@/components/auth-logo';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -54,7 +54,7 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
          <div className="flex justify-center mb-6">
-            <Logo />
+            <AuthLogo />
         </div>
         <Card>
           <CardHeader>
