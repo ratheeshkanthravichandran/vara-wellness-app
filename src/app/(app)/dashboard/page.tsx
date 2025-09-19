@@ -7,8 +7,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Droplet, Zap, Heart, Brain, CalendarPlus, Hand } from 'lucide-react';
-import { TodaySuggestions } from './components/today-suggestions';
-import { PeriodHistory } from './components/period-history';
 import { useCycleStore } from '@/store/cycle-data-store';
 import { useEffect } from 'react';
 import { format, differenceInDays } from 'date-fns';
@@ -16,8 +14,70 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
-import { CyclePhaseInfo } from './components/cycle-phase-info';
-import { DailyAffirmation } from './components/daily-affirmation';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const TodaySuggestions = dynamic(
+  () => import('./components/today-suggestions').then((mod) => mod.TodaySuggestions),
+  { 
+    loading: () => (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight font-headline">
+            Today's Suggestions
+          </h2>
+          <Button variant="outline">View More</Button>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Personalized Activity Ideas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2 mt-2" />
+          </CardContent>
+        </Card>
+      </div>
+    ),
+    ssr: false 
+  }
+);
+
+const PeriodHistory = dynamic(
+  () => import('./components/period-history').then((mod) => mod.PeriodHistory),
+  { 
+    loading: () => (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold tracking-tight font-headline">
+          Period History
+        </h2>
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Logged Cycles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    ),
+    ssr: false
+  }
+);
+
+const CyclePhaseInfo = dynamic(
+  () => import('./components/cycle-phase-info').then((mod) => mod.CyclePhaseInfo),
+  { ssr: false }
+);
+
+const DailyAffirmation = dynamic(
+  () => import('./components/daily-affirmation').then((mod) => mod.DailyAffirmation),
+  { ssr: false }
+);
+
 
 function getCycleDay(cycleData: ReturnType<typeof useCycleStore>['cycleData']): number {
     if (!cycleData || cycleData.periods.length === 0) {

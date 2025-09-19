@@ -1,6 +1,23 @@
-import { RecipeSuggestions } from './components/recipe-suggestions';
+'use client';
 import { Leaf } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
+
+const RecipeSuggestions = dynamic(
+  () => import('./components/recipe-suggestions').then(mod => mod.RecipeSuggestions),
+  {
+    loading: () => (
+      <Card>
+        <CardContent className="p-6">
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    ),
+    ssr: false,
+  }
+);
 
 export default function DietPage() {
   return (

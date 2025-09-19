@@ -1,8 +1,60 @@
-import { ReliefSuggestionsForm } from './components/relief-suggestions-form';
-import { ActivityRecommendationsForm } from './components/activity-recommendations-form';
+'use client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sparkles, Lightbulb } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import dynamic from 'next/dynamic';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const ReliefSuggestionsForm = dynamic(
+  () => import('./components/relief-suggestions-form').then(mod => mod.ReliefSuggestionsForm),
+  {
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Symptom Relief Suggestions</CardTitle>
+          <CardDescription>
+            Tell us how you're feeling, and we'll generate some personalized ideas
+            to help you find relief.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+        </CardContent>
+      </Card>
+    ),
+    ssr: false,
+  }
+);
+
+const ActivityRecommendationsForm = dynamic(
+  () => import('./components/activity-recommendations-form').then(mod => mod.ActivityRecommendationsForm),
+  {
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity Recommendations</CardTitle>
+          <CardDescription>
+            Find exercises and activities perfectly suited for your current cycle
+            phase and energy levels.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+        </CardContent>
+      </Card>
+    ),
+    ssr: false,
+  }
+);
 
 export default function SuggestionsPage() {
   return (

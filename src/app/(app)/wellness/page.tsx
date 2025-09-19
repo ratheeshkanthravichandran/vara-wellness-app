@@ -1,10 +1,40 @@
-import { WellnessJournal } from './components/wellness-journal';
+'use client';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 import { BrainCircuit, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const WellnessJournal = dynamic(
+  () => import('./components/wellness-journal').then(mod => mod.WellnessJournal),
+  {
+    loading: () => (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BrainCircuit />
+            My Wellness Journal
+          </CardTitle>
+          <CardDescription>
+            Take a moment to reflect on your thoughts and feelings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+        </CardContent>
+      </Card>
+    ),
+    ssr: false
+  }
+);
+
 
 export default function WellnessPage() {
   return (
