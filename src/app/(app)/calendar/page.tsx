@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { addDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap, Repeat } from 'lucide-react';
@@ -38,6 +39,7 @@ const SYMPTOMS_LIST = [
 
 export default function CalendarPage() {
   const { logs, cycleData, isInitialized, initialize, saveLog, logPeriod } = useCycleStore();
+  const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
@@ -78,12 +80,14 @@ export default function CalendarPage() {
       });
     }
     setIsLogOpen(false);
+    router.push('/dashboard');
   };
 
   const handleLogPeriod = () => {
     if (selectedRange?.from && selectedRange?.to) {
         logPeriod(selectedRange.from, selectedRange.to);
         setSelectedRange(undefined);
+        router.push('/dashboard');
     }
   };
 
