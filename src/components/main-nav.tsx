@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -33,12 +34,19 @@ const menuItems = [
 
 export function MainNav() {
   const pathname = usePathname();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <SidebarMenu>
       {menuItems.map((item) => (
         <SidebarMenuItem key={item.href}>
-          <Link href={item.href}>
+          <Link href={item.href} onClick={handleLinkClick}>
             <SidebarMenuButton
               isActive={pathname.startsWith(item.href)}
               tooltip={item.label}
