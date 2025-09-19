@@ -9,8 +9,9 @@ import {
 } from '@/components/ui/card';
 import { Droplet, Zap, Heart, Brain, CalendarPlus } from 'lucide-react';
 import { TodaySuggestions } from './components/today-suggestions';
+import { PeriodHistory } from './components/period-history';
 import { useCycleStore } from '@/store/cycle-data-store';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -35,7 +36,6 @@ function getCycleDay(cycleData: ReturnType<typeof useCycleStore>['cycleData']): 
     return cycleDay;
   }
   
-
 function getCyclePhase(day: number, periodLength: number) {
     if (day <= periodLength) return 'Menstrual Phase';
     if (day <= 13) return 'Follicular Phase';
@@ -61,16 +61,10 @@ export default function DashboardPage() {
   const { logs, cycleData, isInitialized, initialize } = useCycleStore();
   
   useEffect(() => {
-      initialize();
-  }, [initialize]);
-
-  if (!isInitialized) {
-      return (
-          <div className="flex flex-1 flex-col items-center justify-center">
-              <p>Loading your dashboard...</p>
-          </div>
-      );
-  }
+      if (!isInitialized) {
+        initialize();
+      }
+  }, [isInitialized, initialize]);
 
   const todayKey = format(new Date(), 'yyyy-MM-dd');
   const log = logs[todayKey] || null;
@@ -82,6 +76,13 @@ export default function DashboardPage() {
   const moodValue = log?.mood ? `${getMoodLabel(log.mood)} (${log.mood}/5)` : "Not Logged";
   const symptoms = log?.symptoms && log.symptoms.length > 0 ? log.symptoms.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') : "None";
 
+  if (!isInitialized) {
+      return (
+          <div className="flex flex-1 flex-col items-center justify-center">
+              <p>Loading your dashboard...</p>
+          </div>
+      );
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -162,6 +163,7 @@ export default function DashboardPage() {
           </Card>
         </div>
         <TodaySuggestions log={log} cyclePhase={cyclePhase} />
+        <PeriodHistory />
       </main>
     </div>
   );

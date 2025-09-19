@@ -1,3 +1,4 @@
+'use client';
 import { create } from 'zustand';
 import { addDays, format, differenceInDays, startOfDay } from 'date-fns';
 
@@ -129,34 +130,31 @@ export const useCycleStore = create<CycleState>((set, get) => ({
       to: format(startOfDay(to), 'yyyy-MM-dd'),
     };
 
-    let newCycleLength = cycleData.cycleLength;
-    let newPeriodLength = cycleData.periodLength;
+    const newPeriods = [...cycleData.periods, newPeriod].sort(
+      (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
+    );
 
-    if (cycleData.periods.length > 0) {
-      const lastPeriod = cycleData.periods[cycleData.periods.length - 1];
-      const lastCycleLength = differenceInDays(
-        new Date(newPeriod.from),
-        new Date(lastPeriod.from)
-      );
-      if (lastCycleLength > 10 && lastCycleLength < 60) {
-        newCycleLength = Math.round(
-          (cycleData.cycleLength + lastCycleLength) / 2
-        );
-      }
+    // Recalculate average cycle length
+    let totalCycleDays = 0;
+    let cycleCount = 0;
+    for (let i = 1; i < newPeriods.length; i++) {
+        const cycleLength = differenceInDays(new Date(newPeriods[i].from), new Date(newPeriods[i-1].from));
+        if (cycleLength > 10 && cycleLength < 60) {
+            totalCycleDays += cycleLength;
+            cycleCount++;
+        }
     }
+    const newCycleLength = cycleCount > 0 ? Math.round(totalCycleDays / cycleCount) : cycleData.cycleLength;
 
-    const currentPeriodLength =
-      differenceInDays(new Date(newPeriod.to), new Date(newPeriod.from)) + 1;
-    if (currentPeriodLength > 0 && currentPeriodLength < 15) {
-      newPeriodLength = Math.round(
-        (cycleData.periodLength + currentPeriodLength) / 2
-      );
-    }
+    // Recalculate average period length
+    const totalPeriodDays = newPeriods.reduce((sum, period) => {
+      const length = differenceInDays(new Date(period.to), new Date(period.from)) + 1;
+      return sum + length;
+    }, 0);
+    const newPeriodLength = Math.round(totalPeriodDays / newPeriods.length);
 
     const updatedCycleData: CycleData = {
-      periods: [...cycleData.periods, newPeriod].sort(
-        (a, b) => new Date(a.from).getTime() - new Date(b.from).getTime()
-      ),
+      periods: newPeriods,
       cycleLength: newCycleLength,
       periodLength: newPeriodLength,
     };
