@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Droplet, Zap, Heart, Brain, CalendarPlus } from 'lucide-react';
+import { Droplet, Zap, Heart, Brain, CalendarPlus, Hand } from 'lucide-react';
 import { TodaySuggestions } from './components/today-suggestions';
 import { PeriodHistory } from './components/period-history';
 import { useCycleStore } from '@/store/cycle-data-store';
@@ -67,6 +67,55 @@ export default function DashboardPage() {
       }
   }, [isInitialized, initialize]);
 
+  if (!isInitialized) {
+    return (
+        <div className="flex flex-1 flex-col items-center justify-center">
+            <p>Loading your dashboard...</p>
+        </div>
+    );
+  }
+
+  const isNewUser = cycleData.periods.length === 0;
+
+  if (isNewUser) {
+    return (
+        <div className="flex flex-1 flex-col">
+            <header className="flex h-14 lg:h-[60px] items-center justify-between gap-4 border-b bg-background/80 backdrop-blur-sm px-6 sticky top-0 z-30">
+                <div className="flex items-center gap-4">
+                    <SidebarTrigger className="lg:hidden" />
+                    <div className="hidden lg:block">
+                        <Logo />
+                    </div>
+                     <div className="lg:hidden">
+                        <h1 className="text-lg font-semibold md:text-2xl font-headline">Welcome!</h1>
+                    </div>
+                </div>
+            </header>
+            <main className="flex flex-1 flex-col items-center justify-center text-center p-4">
+                <Card className="max-w-md">
+                    <CardHeader>
+                        <CardTitle className="font-headline text-3xl flex items-center justify-center gap-2">
+                            <Hand className="h-8 w-8 text-primary" />
+                            Welcome to Vara!
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground mb-6">
+                           It looks like you're new here. To get personalized insights, please log your first period.
+                        </p>
+                         <Link href="/calendar">
+                            <Button size="lg">
+                                <CalendarPlus className="mr-2 h-5 w-5" />
+                                Log Your Period
+                            </Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </main>
+        </div>
+    );
+  }
+
   const todayKey = format(new Date(), 'yyyy-MM-dd');
   const log = logs[todayKey] || null;
 
@@ -76,14 +125,6 @@ export default function DashboardPage() {
   const energyValue = log?.energy ? `${getEnergyLabel(log.energy)} (${log.energy}/10)`: "Not Logged";
   const moodValue = log?.mood ? `${getMoodLabel(log.mood)} (${log.mood}/5)` : "Not Logged";
   const symptoms = log?.symptoms && log.symptoms.length > 0 ? log.symptoms.map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(', ') : "None";
-
-  if (!isInitialized) {
-      return (
-          <div className="flex flex-1 flex-col items-center justify-center">
-              <p>Loading your dashboard...</p>
-          </div>
-      );
-  }
 
   return (
     <div className="flex flex-1 flex-col">

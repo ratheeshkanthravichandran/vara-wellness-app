@@ -55,11 +55,12 @@ function getCycleDataFromStorage(): CycleData {
   if (savedData) {
     try {
       const parsedData = JSON.parse(savedData);
+      // Ensure the parsed data is valid before returning
       if (
         parsedData &&
-        parsedData.periods &&
-        parsedData.cycleLength &&
-        parsedData.periodLength
+        Array.isArray(parsedData.periods) &&
+        typeof parsedData.cycleLength === 'number' &&
+        typeof parsedData.periodLength === 'number'
       ) {
         return parsedData;
       }
@@ -68,22 +69,12 @@ function getCycleDataFromStorage(): CycleData {
     }
   }
 
-  // Create default data only if nothing valid is found
-  const today = new Date();
-  const defaultStart = addDays(today, -10);
-  const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
-  const defaultCycleData: CycleData = {
-    periods: [
-      {
-        from: format(defaultStart, 'yyyy-MM-dd'),
-        to: format(defaultEnd, 'yyyy-MM-dd'),
-      },
-    ],
+  // If no valid data is found, return a default empty state
+  return {
+    periods: [],
     cycleLength: DEFAULT_CYCLE_LENGTH,
     periodLength: DEFAULT_PERIOD_LENGTH,
   };
-  window.localStorage.setItem('vara-cycle-data', JSON.stringify(defaultCycleData));
-  return defaultCycleData;
 }
 
 
