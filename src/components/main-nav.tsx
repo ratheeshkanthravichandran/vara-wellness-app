@@ -26,6 +26,7 @@ const menuItems = [
   { href: '/wellness', label: 'Wellness', icon: BrainCircuit },
   { href: '/diet', label: 'Diet', icon: Leaf },
   { href: '/suggestions', label: 'Suggestions', icon: Sparkles },
+  { href: '/pcos-pcod', label: 'PCOS/PCOD', icon: HeartPulse },
   { href: '/assistant', label: 'Ask Tiara', icon: MessageCircle },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

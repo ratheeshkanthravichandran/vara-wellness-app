@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
-  { href: '/health-monitor', label: 'Monitor', icon: HeartPulse },
+  { href: '/pcos-pcod', label: 'PCOS', icon: HeartPulse },
   { href: '/assistant', label: 'Ask Tiara', icon: MessageCircle },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
