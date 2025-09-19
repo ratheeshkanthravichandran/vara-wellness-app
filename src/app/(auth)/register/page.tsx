@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,6 +41,19 @@ export default function RegisterPage() {
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       toast({ title: 'Registration successful!', description: 'You can now log in.' });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Registration failed',
+        description: error.message,
+      });
+    }
+  };
+
+   const handleGoogleSignIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+      toast({ title: 'Registration successful!' });
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -97,6 +110,20 @@ export default function RegisterPage() {
                 </Button>
               </form>
             </Form>
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+               <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512"><path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 126 21.2 177 56.4L357 182.2C322 149.2 286.3 128 248 128c-73.2 0-133 59.4-133 128s59.8 128 133 128c77.4 0 113.8-49.3 118.5-74.8H248V261.8h239.2z"></path></svg>
+              Google
+            </Button>
              <div className="mt-4 text-center text-sm">
               Already have an account?{' '}
               <Link href="/login" className="underline">
