@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -43,7 +44,7 @@ export default function CalendarPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
   const [isLogOpen, setIsLogOpen] = useState(false);
 
@@ -55,6 +56,7 @@ export default function CalendarPage() {
   
   useEffect(() => {
     initialize();
+    setSelectedDate(new Date());
   }, [initialize]);
 
   const handleDayClick = (day: Date) => {
@@ -208,6 +210,9 @@ export default function CalendarPage() {
                             <DialogContent className="max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                     <DialogTitle>Log for {format(selectedDate || new Date(), 'MMMM d, yyyy')}</DialogTitle>
+                                     <DialogDescription>
+                                        Log your flow, symptoms, mood, and energy for this day.
+                                    </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-6 py-4">
                                      <div className="space-y-2">
