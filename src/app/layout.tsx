@@ -14,6 +14,7 @@ const alegreya = Alegreya({
 export const metadata: Metadata = {
   title: 'Vara',
   description: 'A supportive period and wellness tracker for women.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
