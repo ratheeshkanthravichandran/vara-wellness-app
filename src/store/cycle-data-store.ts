@@ -20,16 +20,6 @@ export type CycleData = {
 const DEFAULT_CYCLE_LENGTH = 28;
 const DEFAULT_PERIOD_LENGTH = 5;
 
-// --- Store State ---
-type CycleState = {
-  logs: Record<string, LogData>;
-  cycleData: CycleData;
-  isInitialized: boolean;
-  initialize: () => void;
-  saveLog: (date: Date, log: LogData) => void;
-  logPeriod: (from: Date, to: Date) => void;
-};
-
 // --- Helper Functions for localStorage ---
 function getLogsFromStorage(): Record<string, LogData> {
   if (typeof window === 'undefined') return {};
@@ -44,16 +34,8 @@ function saveLogsToStorage(logs: Record<string, LogData>) {
 
 function getCycleDataFromStorage(): CycleData {
   if (typeof window === 'undefined') {
-    const today = new Date();
-    const defaultStart = addDays(today, -10);
-    const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
     return {
-      periods: [
-        {
-          from: format(defaultStart, 'yyyy-MM-dd'),
-          to: format(defaultEnd, 'yyyy-MM-dd'),
-        },
-      ],
+      periods: [],
       cycleLength: DEFAULT_CYCLE_LENGTH,
       periodLength: DEFAULT_PERIOD_LENGTH,
     };
@@ -66,7 +48,8 @@ function getCycleDataFromStorage(): CycleData {
       if (
         parsedData.periods &&
         parsedData.cycleLength &&
-        parsedData.periodLength
+        parsedData.periodLength &&
+        parsedData.periods.length > 0
       ) {
         return parsedData;
       }
@@ -75,6 +58,7 @@ function getCycleDataFromStorage(): CycleData {
     }
   }
 
+  // Create default data only if nothing valid is found
   const today = new Date();
   const defaultStart = addDays(today, -10);
   const defaultEnd = addDays(defaultStart, DEFAULT_PERIOD_LENGTH - 1);
@@ -91,6 +75,7 @@ function getCycleDataFromStorage(): CycleData {
   window.localStorage.setItem('vara-cycle-data', JSON.stringify(defaultCycleData));
   return defaultCycleData;
 }
+
 
 function saveCycleDataToStorage(data: CycleData) {
   if (typeof window === 'undefined') return;
