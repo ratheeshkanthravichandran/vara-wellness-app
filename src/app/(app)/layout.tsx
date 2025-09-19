@@ -20,7 +20,7 @@ export default function AppLayout({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
-        <Sidebar variant="floating" collapsible="icon" className="w-1/4 max-w-[280px] hidden md:flex">
+        <Sidebar variant="floating" collapsible="icon" className="hidden md:flex">
             <SidebarHeader>
               <Logo />
             </SidebarHeader>

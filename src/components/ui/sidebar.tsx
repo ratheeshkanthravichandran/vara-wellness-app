@@ -23,7 +23,7 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "5rem" // Increased width for icon-only state
+const SIDEBAR_WIDTH_ICON = "3.5rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContext = {
@@ -199,23 +199,26 @@ const Sidebar = React.forwardRef<
     }
 
     if (variant === 'floating') {
-       return (
-         <aside
-           ref={ref}
-           className={cn(
-             "group sticky top-0 h-screen flex flex-col z-10",
-             'transition-all duration-300 ease-in-out',
-             state === 'expanded' ? 'w-[--sidebar-width]' : 'w-[--sidebar-width-icon]',
-             className
-           )}
-            data-state={state}
-            {...props}
-         >
-           <div className="flex flex-col h-full w-full p-2">
-             {children}
-           </div>
-         </aside>
-       )
+      return (
+        <aside
+          ref={ref}
+          className={cn(
+            'group sticky top-0 z-10 h-screen flex-col',
+            'transition-all duration-300 ease-in-out',
+            'p-2',
+            state === 'expanded'
+              ? 'w-[calc(var(--sidebar-width)_+_theme(spacing.4))]'
+              : 'w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4))]',
+            className
+          )}
+          data-state={state}
+          {...props}
+        >
+          <div className="flex h-full w-full flex-col rounded-lg border bg-card text-card-foreground shadow-sm">
+            {children}
+          </div>
+        </aside>
+      );
     }
 
 
