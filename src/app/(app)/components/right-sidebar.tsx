@@ -4,7 +4,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { useCycleStore } from '@/store/cycle-data-store';
 import { differenceInDays } from 'date-fns';
 import { useEffect, useState } from 'react';
-import { Sparkles, Info } from 'lucide-react';
+import { Sparkles, Info, CalendarPlus, Lightbulb, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 function getCycleDay(cycleData: ReturnType<typeof useCycleStore>['cycleData']): number {
     if (!cycleData || cycleData.periods.length === 0) {
@@ -89,6 +91,38 @@ function DailyAffirmation() {
     );
 }
 
+function QuickActions() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                    Quick Actions
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+                <Button asChild variant="outline" className="w-full justify-start">
+                    <Link href="/calendar">
+                        <CalendarPlus className="mr-2 h-4 w-4" />
+                        Log Today's Data
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                    <Link href="/suggestions">
+                        <Lightbulb className="mr-2 h-4 w-4" />
+                        Get Suggestions
+                    </Link>
+                </Button>
+                 <Button asChild variant="outline" className="w-full justify-start">
+                    <Link href="/assistant">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Ask Tiara
+                    </Link>
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
+
 
 export function RightSidebar() {
   return (
@@ -96,6 +130,7 @@ export function RightSidebar() {
         <div className="sticky top-[75px] space-y-6">
             <CyclePhaseInfo />
             <DailyAffirmation />
+            <QuickActions />
         </div>
     </aside>
   );
