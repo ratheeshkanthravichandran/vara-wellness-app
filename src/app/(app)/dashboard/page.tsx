@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Logo } from '@/components/logo';
+import { CyclePhaseInfo } from './components/cycle-phase-info';
+import { DailyAffirmation } from './components/daily-affirmation';
 
 function getCycleDay(cycleData: ReturnType<typeof useCycleStore>['cycleData']): number {
     if (!cycleData || cycleData.periods.length === 0) {
@@ -161,6 +163,10 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
+        </div>
+        <div className="lg:hidden space-y-4">
+          <CyclePhaseInfo />
+          <DailyAffirmation />
         </div>
         <TodaySuggestions log={log} cyclePhase={cyclePhase} />
         <PeriodHistory />
