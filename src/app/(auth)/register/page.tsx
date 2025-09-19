@@ -53,13 +53,15 @@ export default function RegisterPage() {
    const handleGoogleSignIn = async () => {
     try {
       await signInWithRedirect(auth, googleProvider);
-      // The page will redirect, so a success toast here is not necessary.
-      // The auth context will handle redirection upon successful login.
     } catch (error: any) {
+      let description = error.message;
+      if (error.code === 'auth/unauthorized-domain') {
+          description = 'This app is not authorized to sign in. Please contact support.';
+      }
       toast({
         variant: 'destructive',
         title: 'Registration failed',
-        description: error.message,
+        description: description,
       });
     }
   };
