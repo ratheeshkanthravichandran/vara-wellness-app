@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { addDays, format, eachDayOfInterval, startOfDay } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { Brain, PlusCircle, Droplet, Calendar as CalendarIcon, Heart, Zap, Repeat } from 'lucide-react';
@@ -41,7 +40,6 @@ const SYMPTOMS_LIST = [
 
 export default function CalendarPage() {
   const { logs, cycleData, isInitialized, initialize, saveLog, logPeriod } = useCycleStore();
-  const router = useRouter();
   const { toast } = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
@@ -56,8 +54,13 @@ export default function CalendarPage() {
   
   useEffect(() => {
     initialize();
-    setSelectedDate(new Date());
   }, [initialize]);
+
+  useEffect(() => {
+    if (!selectedDate) {
+        setSelectedDate(new Date());
+    }
+  }, [selectedDate]);
 
   const handleDayClick = (day: Date) => {
     setSelectedDate(day);
@@ -85,7 +88,6 @@ export default function CalendarPage() {
       toast({ title: 'Log saved successfully!' });
     }
     setIsLogOpen(false);
-    router.push('/dashboard');
   };
 
   const handleLogPeriod = () => {
@@ -93,7 +95,6 @@ export default function CalendarPage() {
         logPeriod(selectedRange.from, selectedRange.to);
         setSelectedRange(undefined);
         toast({ title: 'Period dates logged successfully!' });
-        router.push('/dashboard');
     }
   };
 
@@ -320,3 +321,5 @@ export default function CalendarPage() {
     </div>
   );
 }
+
+    
