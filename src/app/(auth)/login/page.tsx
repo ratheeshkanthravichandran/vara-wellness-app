@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -52,8 +52,9 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
-      toast({ title: 'Login successful!' });
+      await signInWithRedirect(auth, googleProvider);
+      // The page will redirect, so a success toast here is not necessary.
+      // The auth context will handle redirection upon successful login.
     } catch (error: any) {
       toast({
         variant: 'destructive',
