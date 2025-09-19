@@ -26,6 +26,7 @@ export default function LandingPage() {
                 objectFit="cover"
                 className="opacity-20"
                 data-ai-hint="empowered woman"
+                priority
             />
             <div className="relative z-10 p-4">
                 <h1 className="text-4xl md:text-6xl font-bold font-headline">
