@@ -3,7 +3,15 @@ import React from 'react';
 import { useSidebar } from '@/components/ui/sidebar';
 
 export function Logo() {
-  const { state } = useSidebar();
+  let state: 'expanded' | 'collapsed' = 'expanded';
+  try {
+    const { state: sidebarState } = useSidebar();
+    state = sidebarState;
+  } catch (error) {
+    // SidebarProvider is not in the tree, so we can't use the hook.
+    // We'll just default to the expanded state.
+  }
+
   return (
     <div className="flex items-center gap-2 p-2">
       <svg
