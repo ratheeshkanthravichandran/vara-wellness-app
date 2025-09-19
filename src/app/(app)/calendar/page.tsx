@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCycleStore, type LogData } from '@/store/cycle-data-store';
+import { useToast } from '@/hooks/use-toast';
 
 const SYMPTOMS_LIST = [
     { id: 'cramps', label: 'Cramps' },
@@ -40,6 +41,7 @@ const SYMPTOMS_LIST = [
 export default function CalendarPage() {
   const { logs, cycleData, isInitialized, initialize, saveLog, logPeriod } = useCycleStore();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
@@ -78,6 +80,7 @@ export default function CalendarPage() {
         mood: selectedMood,
         energy: selectedEnergy,
       });
+      toast({ title: 'Log saved successfully!' });
     }
     setIsLogOpen(false);
     router.push('/dashboard');
@@ -87,6 +90,7 @@ export default function CalendarPage() {
     if (selectedRange?.from && selectedRange?.to) {
         logPeriod(selectedRange.from, selectedRange.to);
         setSelectedRange(undefined);
+        toast({ title: 'Period dates logged successfully!' });
         router.push('/dashboard');
     }
   };
