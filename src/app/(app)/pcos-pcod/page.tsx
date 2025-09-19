@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import ReactMarkdown from 'react-markdown';
 
 type Message = {
   role: 'user' | 'model';
@@ -145,9 +146,9 @@ export default function PcosPcodPage() {
                           Tiara is thinking...
                         </p>
                       ) : (
-                        <p className="text-sm">
+                        <ReactMarkdown className="prose prose-sm max-w-none prose-p:text-current">
                           {msg.content}
-                        </p>
+                        </ReactMarkdown>
                       )}
                     </div>
                     {msg.role === 'user' && (
