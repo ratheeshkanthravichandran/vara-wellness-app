@@ -8,6 +8,7 @@ import {
   HeartPulse,
   Leaf,
   MessageCircle,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +17,7 @@ const navItems = [
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/health-monitor', label: 'Monitor', icon: HeartPulse },
   { href: '/assistant', label: 'Ask Tiara', icon: MessageCircle },
-  { href: '/diet', label: 'Diet', icon: Leaf },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function BottomNavBar() {

@@ -32,11 +32,11 @@ export default function AppLayout({
             </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 w-full flex justify-center">
-          <div className="flex-1 w-full max-w-4xl border-x pb-20 md:pb-0">
+        <div className="flex-1 w-full flex justify-center">
+          <main className="flex-1 w-full max-w-4xl border-x pb-20 md:pb-0">
             {children}
-          </div>
-        </main>
+          </main>
+        </div>
         
         <RightSidebar />
         <BottomNavBar />

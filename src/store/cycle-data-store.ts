@@ -16,6 +16,16 @@ export type CycleData = {
   periodLength: number;
 };
 
+interface CycleState {
+    logs: Record<string, LogData>;
+    cycleData: CycleData;
+    isInitialized: boolean;
+    initialize: () => void;
+    saveLog: (date: Date, log: LogData) => void;
+    logPeriod: (from: Date, to: Date) => void;
+    setCycleData: (data: CycleData) => void;
+}
+
 // --- Constants ---
 const DEFAULT_CYCLE_LENGTH = 28;
 const DEFAULT_PERIOD_LENGTH = 5;
@@ -46,10 +56,10 @@ function getCycleDataFromStorage(): CycleData {
     try {
       const parsedData = JSON.parse(savedData);
       if (
+        parsedData &&
         parsedData.periods &&
         parsedData.cycleLength &&
-        parsedData.periodLength &&
-        parsedData.periods.length > 0
+        parsedData.periodLength
       ) {
         return parsedData;
       }
@@ -147,4 +157,9 @@ export const useCycleStore = create<CycleState>((set, get) => ({
     saveCycleDataToStorage(updatedCycleData);
     set({ cycleData: updatedCycleData });
   },
+
+  setCycleData: (data) => {
+      saveCycleDataToStorage(data);
+      set({ cycleData: data });
+  }
 }));
